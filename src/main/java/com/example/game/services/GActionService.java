@@ -40,7 +40,7 @@ public class GActionService implements GActionInterface {
 
   @Override
   public Score calculateScore(String pid, String player_id) {
-    throw new ExecutionException("Not implemented");
+
   }
 
   @Override

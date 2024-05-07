@@ -1,11 +1,8 @@
 package com.example.game.entities;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import com.example.game.keys.QuestionKey;
+import jakarta.persistence.*;
+
 import java.io.Serializable;
 import java.util.List;
 import lombok.Getter;
@@ -14,18 +11,14 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
+@Table
 public class Question implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Getter
     @Id
-    private String pid; //party id
-
-    @Getter
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private QuestionKey qid;
 
     @Column
     private String statement;

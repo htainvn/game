@@ -1,5 +1,7 @@
 package com.example.game.entities;
 
+import com.example.game.keys.AnswerKey;
+import com.example.game.repo.AnswerRepository;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -16,11 +18,7 @@ public class Answer implements Serializable {
 
   @Getter
   @Id
-  private String pid; //party id
-
-  @Getter
-  @Id
-  private Long id;
+  private AnswerKey aid;
 
   @Column
   private String content;
@@ -29,7 +27,7 @@ public class Answer implements Serializable {
   private Boolean isCorrect;
 
   @ManyToOne
-  @Id
+//  @Column(insertable=false, updatable=false)
   @JoinColumn(name = "qid")
   private Question question;
 

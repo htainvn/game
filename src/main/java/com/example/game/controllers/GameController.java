@@ -11,39 +11,36 @@ import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.ServerEndpoint;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 
 @Component
-@ServerEndpoint("/game")
+@Controller
 public class GameController {
-  private final GInfoService gInfoService;
 
-  private final GActionService gActionService;
+
+  private GInfoService gInfoService;
+
+  private GActionService gActionService;
 
   @Autowired
   public GameController(GInfoService gInfoService, GActionService gActionService) {
-    this.gInfoService = gInfoService;
-    this.gActionService = gActionService;
+      this.gInfoService = gInfoService;
+      this.gActionService = gActionService;
   }
 
-  @OnOpen
-  public void onOpen(Session session, HttpServletRequest request) {
-    System.out.println("WebSocket opened: " + request.getRemoteAddr());
-    gActionService.registerPlayer(session, Player.builder().build());
+  @MessageMapping("/game.HELLO")
+  @SendTo("/topic/game.HELLO")
+  public String hello() {
+    return "Hello, World!";
   }
 
-  @OnClose
-  public void onClose(Session session) {
-    System.out.println("WebSocket closed");
-  }
-
-  @OnMessage
-  public void onMessage(String message, Session session) {
-    System.out.println("Message received: " + message);
-  }
-
-  @OnError
-  public void onError(Throwable error) {
-    System.out.println("Error: " + error.getMessage());
+  @MessageMapping("/game.REG")
+  @SendTo("/topic/game.REG")
+  public Player register(@Payload Player player) {
+      return player;
   }
 }
