@@ -18,15 +18,27 @@ public class Question implements Serializable {
 
     @Getter
     @Id
-    private QuestionKey qid;
+    private QuestionKey id;
 
     @Column
     private String statement;
 
     @Column
     private String category;
+    @Column
+    private Long points;
+    @Column
+    private Long time;
 
     @OneToMany(mappedBy = "question")
     private List<Answer> answers;
 
+    public Long getCorrectAnswer() {
+        for (Answer answer : answers) {
+            if (answer.getIsCorrect()) {
+                return answer.getId().getAid();
+            }
+        }
+        return null;
+    }
 }

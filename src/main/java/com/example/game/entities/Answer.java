@@ -1,7 +1,6 @@
 package com.example.game.entities;
 
 import com.example.game.keys.AnswerKey;
-import com.example.game.repo.AnswerRepository;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -18,17 +17,17 @@ public class Answer implements Serializable {
 
   @Getter
   @Id
-  private AnswerKey aid;
+  private AnswerKey id;
 
   @Column
   private String content;
 
+  @Getter
   @Column
   private Boolean isCorrect;
 
   @ManyToOne
 //  @Column(insertable=false, updatable=false)
-  @JoinColumn(name = "qid")
+  @JoinColumn(name = "id")
   private Question question;
-
 }

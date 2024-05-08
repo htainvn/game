@@ -1,9 +1,10 @@
 package com.example.game.datacontainer;
 
 import com.example.game.entities.Score;
+
 import java.util.HashMap;
 import java.util.stream.Stream;
-import org.javatuples.Pair;
+
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,6 +16,14 @@ public class ScoreDictionary {
     return result;
   }
 
+  public HashMap<String, Score> getScore(String party_id) {
+    return scores.get(party_id);
+  }
+
+  public void setScore(String party_id, HashMap<String, Score> score) {
+    scores.put(party_id, score);
+  }
+
   private Score updateScore(String party_id, String player_id, Long scoreUp) {
     Score scoreObj = scores.get(party_id).get(player_id);
     scores.get(party_id).get(player_id).setScore(scoreObj.getScore() + scoreUp);
@@ -24,14 +33,11 @@ public class ScoreDictionary {
   }
 
   public Score[] updateScoreOfGame(
-      String party_id, HashMap<String,
-      Pair<Boolean, Integer>> gameResults
+      String party_id, HashMap<String, Integer> gameResults
   ) {
     gameResults.forEach(
         (player_id, result) -> {
-          if (result.getValue0()) {
-            updateScore(party_id, player_id, result.getValue1().longValue());
-          }
+            updateScore(party_id, player_id, result.longValue());
         }
     );
     return scores.get(party_id).values().toArray(new Score[0]);

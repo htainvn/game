@@ -7,27 +7,27 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ChoiceDictionary {
-  private HashMap<String, HashMap<Integer, ArrayList<GameChoice>>> choices;
+  private HashMap<String, HashMap<String, ArrayList<GameChoice>>> choices;
   /*
   party id -> question id -> list of choices
    */
 
   public ChoiceDictionary() {
-    choices = new HashMap<String, HashMap<Integer, ArrayList<GameChoice>>>();
+    choices = new HashMap<String, HashMap<String, ArrayList<GameChoice>>>();
   }
 
   public void addChoice(GameChoice choice) {
-    if (!choices.containsKey(choice.getPid())) {
-      choices.put(choice.getPid(), new HashMap<Integer, ArrayList<GameChoice>>());
+    if (!choices.containsKey(choice.getParty_id())) {
+      choices.put(choice.getParty_id(), new HashMap<String, ArrayList<GameChoice>>());
     }
-    if (!choices.get(choice.getPid()).containsKey(choice.getQid())) {
-      choices.get(choice.getPid()).put(Integer.valueOf(choice.getQid()), new ArrayList<GameChoice>());
+    if (!choices.get(choice.getParty_id()).containsKey(choice.getQid())) {
+      choices.get(choice.getParty_id()).put(choice.getQid(), new ArrayList<GameChoice>());
     }
-    choices.get(choice.getPid()).get(choice.getQid()).add(choice);
+    choices.get(choice.getParty_id()).get(choice.getQid()).add(choice);
   }
 
-  public ArrayList<GameChoice> getChoices(String pid, int qid) {
-    return choices.get(pid).get(qid);
+  public ArrayList<GameChoice> getChoices(String party_id, String qid) {
+    return choices.get(party_id).get(qid);
   }
 
   public void removeAllChoicesFromParty(String pid) {

@@ -3,9 +3,12 @@ package com.example.game.entities;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import java.io.Serializable;
-import lombok.Getter;
-import lombok.Setter;
 
+import lombok.*;
+
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 public class Score implements Serializable

@@ -5,17 +5,19 @@ import com.example.game.entities.Player;
 import com.example.game.entities.Question;
 import com.example.game.entities.Score;
 import jakarta.websocket.Session;
-import java.lang.reflect.Array;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import org.javatuples.Pair;
 
 public interface GActionInterface {
   public void receiveChoice(GameChoice choice);
 
-  public List<Boolean> publishResults(String pid);
+  public List<Boolean> publishResults(String party_id);
 
-  public Score calculateScore(String pid, String player_id);
+  public Score getScore(String party_id, String player_id);
+
+  void calculateScore(String party_id, Question question, String strategy);
 
   public HashMap<String, Score> rank(String pid);
 

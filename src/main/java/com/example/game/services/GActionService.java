@@ -5,12 +5,18 @@ import com.example.game.datacontainer.PlayerDictionary;
 import com.example.game.datacontainer.ScoreDictionary;
 import com.example.game.dto.GameChoice;
 import com.example.game.entities.Player;
+import com.example.game.entities.Question;
 import com.example.game.entities.Score;
+import com.example.game.strategies.ScoringDifficulty;
+import com.example.game.strategies.ScoringEqual;
+import com.example.game.strategies.ScoringTime;
+import com.example.game.strategies.ScoringStrategy;
 import jakarta.websocket.Session;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.hibernate.sql.exec.ExecutionException;
-import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,22 +36,43 @@ public class GActionService implements GActionInterface {
 
   @Override
   public void receiveChoice(GameChoice choice) {
-
+    choices.addChoice(choice);
   }
 
   @Override
-  public List<Boolean> publishResults(String pid) {
+  public List<Boolean> publishResults(String party_id) {
     return null;
   }
 
   @Override
-  public Score calculateScore(String pid, String player_id) {
-
+  public Score getScore(String party_id, String player_id) {
+    return scores.getScore(party_id, player_id);
   }
 
   @Override
-  public HashMap<String, Score> rank(String pid) {
-    return scores.getRanking(pid);
+  public void calculateScore(String party_id, Question question, String strategy) {
+    ScoringStrategy scoringStrategy;
+    switch (strategy) {
+      case "Time":
+        scoringStrategy = new ScoringTime();
+        break;
+      case "Equal":
+        scoringStrategy = new ScoringEqual();
+        break;
+      case "Difficulty":
+        scoringStrategy = new ScoringDifficulty();
+        break;
+      default:
+        throw new ExecutionException("Invalid strategy");
+    }
+
+    HashMap<String, Score> playerScoreList = scoringStrategy.calculateScore(question, choices.getChoices(party_id, question.getId().getQid()), scores.getScore(party_id));
+    scores.setScore(party_id, playerScoreList);
+  }
+
+  @Override
+  public HashMap<String, Score> rank(String party_id) {
+    return scores.getRanking(party_id);
   }
 
   @Override
