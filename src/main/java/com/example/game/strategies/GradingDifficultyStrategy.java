@@ -7,19 +7,25 @@ import com.example.game.entities.Score;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ScoringTime implements ScoringStrategy {
-    Long calculateBonusPoint(Long time, Long totalTime, Long points) {
-        return points - (time * points / totalTime);
-    }
+public class GradingDifficultyStrategy implements GradingStrategy{
 
     @Override
     public HashMap<String, Score> calculateScore(Question question, ArrayList<GameChoice> playerAnswerList, HashMap<String, Score> playerScoreList) {
+        Long countCorrectAnswer = 0L;
+        for (GameChoice playerAnswer: playerAnswerList) {
+            if (playerAnswer.getAid().equals(question.getCorrectAnswer())) {
+                countCorrectAnswer++;
+            }
+        }
+
+        Long bonusScore = question.getPoints() / playerAnswerList.size() * countCorrectAnswer;
         for (GameChoice playerAnswer: playerAnswerList) {
             Score playerScore = playerScoreList.get(playerAnswer.getPlayer_id());
             if (playerAnswer.getAid().equals(question.getCorrectAnswer())) {
-                playerScore.setScore(playerScore.getScore() + calculateBonusPoint(playerAnswer.getTime(), question.getTime(), question.getPoints()));
+                playerScore.setScore(playerScore.getScore() + bonusScore);
             }
         }
+
         return playerScoreList;
     }
 }

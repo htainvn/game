@@ -7,6 +7,6 @@ import com.example.game.entities.Score;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public interface ScoringStrategy {
+public interface GradingStrategy {
     HashMap<String, Score> calculateScore(Question question, ArrayList<GameChoice> playerAnswerList, HashMap<String, Score> playerScoreList);
 }

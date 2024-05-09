@@ -1,5 +1,6 @@
 package com.example.game.services;
 
+import com.example.game.constant.GradingStrategyType;
 import com.example.game.datacontainer.ChoiceDictionary;
 import com.example.game.datacontainer.PlayerDictionary;
 import com.example.game.datacontainer.ScoreDictionary;
@@ -7,13 +8,15 @@ import com.example.game.dto.GameChoice;
 import com.example.game.entities.Player;
 import com.example.game.entities.Question;
 import com.example.game.entities.Score;
-import com.example.game.strategies.ScoringDifficulty;
+import com.example.game.strategies.GradingDifficultyStrategy;
+import com.example.game.strategies.GradingEqualStrategy;
+import com.example.game.strategies.GradingStrategy;
+import com.example.game.strategies.GradingTimeStrategy;
 import com.example.game.strategies.ScoringEqual;
 import com.example.game.strategies.ScoringTime;
 import com.example.game.strategies.ScoringStrategy;
 import jakarta.websocket.Session;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.hibernate.sql.exec.ExecutionException;
@@ -51,16 +54,18 @@ public class GActionService implements GActionInterface {
 
   @Override
   public void calculateScore(String party_id, Question question, String strategy) {
-    ScoringStrategy scoringStrategy;
+    GradingStrategy scoringStrategy;
+    strategy = strategy.toLowerCase();
+
     switch (strategy) {
-      case "Time":
-        scoringStrategy = new ScoringTime();
+      case GradingStrategyType.TIME:
+        scoringStrategy = new GradingTimeStrategy();
         break;
-      case "Equal":
-        scoringStrategy = new ScoringEqual();
+      case GradingStrategyType.EQUAL:
+        scoringStrategy = new GradingEqualStrategy();
         break;
-      case "Difficulty":
-        scoringStrategy = new ScoringDifficulty();
+      case GradingStrategyType.DIFFICULTY:
+        scoringStrategy = new GradingDifficultyStrategy();
         break;
       default:
         throw new ExecutionException("Invalid strategy");
