@@ -1,4 +1,4 @@
-package com.example.game.repo;
+package com.example.game.repository;
 
 import com.example.game.entities.Answer;
 import com.example.game.keys.AnswerKey;

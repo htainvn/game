@@ -28,6 +28,6 @@ public class Answer implements Serializable {
 
   @ManyToOne
 //  @Column(insertable=false, updatable=false)
-  @JoinColumn(name = "id")
+  @JoinColumn(name = "qid")
   private Question question;
 }

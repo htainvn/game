@@ -18,7 +18,7 @@ public class Question implements Serializable {
 
     @Getter
     @Id
-    private QuestionKey id;
+    private QuestionKey qid;
 
     @Column
     private String statement;

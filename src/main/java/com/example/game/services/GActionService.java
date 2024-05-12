@@ -12,9 +12,6 @@ import com.example.game.strategies.GradingDifficultyStrategy;
 import com.example.game.strategies.GradingEqualStrategy;
 import com.example.game.strategies.GradingStrategy;
 import com.example.game.strategies.GradingTimeStrategy;
-import com.example.game.strategies.ScoringEqual;
-import com.example.game.strategies.ScoringTime;
-import com.example.game.strategies.ScoringStrategy;
 import jakarta.websocket.Session;
 
 import java.util.HashMap;
@@ -71,7 +68,13 @@ public class GActionService implements GActionInterface {
         throw new ExecutionException("Invalid strategy");
     }
 
-    HashMap<String, Score> playerScoreList = scoringStrategy.calculateScore(question, choices.getChoices(party_id, question.getId().getQid()), scores.getScore(party_id));
+    HashMap<String, Score> playerScoreList = scoringStrategy.calculateScore(
+        question,
+        choices.getChoices(
+            party_id,
+            question.getQid().getQid()
+        ),
+        scores.getScore(party_id));
     scores.setScore(party_id, playerScoreList);
   }
 
