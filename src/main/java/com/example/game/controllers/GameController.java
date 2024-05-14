@@ -1,20 +1,15 @@
 package com.example.game.controllers;
 
-import com.example.game.entities.Player;
+import com.example.game.config.GameConfig;
+import com.example.game.constant.ReqType;
+import com.example.game.entities.Question;
+import com.example.game.request.AnsweringPayload;
 import com.example.game.request.GInitializeRequest;
 import com.example.game.request.RegisterPayload;
 import com.example.game.request.RequestData;
-import com.example.game.response.GameInitializedResponse;
-import com.example.game.services.GActionService;
-import com.example.game.services.GInfoService;
+import com.example.game.response.*;
 import com.example.game.services.GameService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.websocket.OnClose;
-import jakarta.websocket.OnError;
-import jakarta.websocket.OnMessage;
-import jakarta.websocket.OnOpen;
-import jakarta.websocket.Session;
-import jakarta.websocket.server.ServerEndpoint;
+import com.google.gson.Gson;
 import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -23,10 +18,10 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+
+import java.util.HashMap;
+import java.util.Objects;
 
 @Component
 @Controller
@@ -49,44 +44,84 @@ public class GameController {
   }
   @MessageMapping("/register")
   @SendToUser("/topic/game.REGISTERED")
-  public GameInitializedResponse registerPlayer(@Payload RequestData request) {
+  public GameRegisteredResponse registerPlayer(@Payload RequestData request) {
+    if (!Objects.equals(request.getRequestType(), ReqType.REGISTER)) {
+      throw new UnsupportedOperationException();
+    }
+    Gson payloadGson = new Gson();
+    RegisterPayload payload = payloadGson.fromJson(request.getPayload(), RegisterPayload.class);
+    Pair<String, String> playerInf = gameService.registerPlayerToGame(
+        request.getGameID(),
+        payload.getName()
+    );
 
+    return new GameRegisteredResponse(playerInf.getValue0(), playerInf.getValue1());
   }
 
   @MessageMapping("/start")
   @SendTo("/topic/game.RUNNING")
-  public GameInitializedResponse startGame(@Payload RequestData request) {
-    throw new UnsupportedOperationException();
+  public GameStartResponse startGame(@Payload RequestData request) {
+    if (!Objects.equals(request.getRequestType(), ReqType.START_GAME)) {
+      throw new UnsupportedOperationException();
+    }
+    gameService.startGame(request.getGameID());
+    return new GameStartResponse(request.getGameID());
   }
 
   @MessageMapping("/show")
   @SendTo("/topic/game.SHOW")
-  public GameInitializedResponse showGame(@Payload RequestData request) {
-    throw new UnsupportedOperationException();
+  public QShowingResponse showGame(@Payload RequestData request) {
+    if (!Objects.equals(request.getRequestType(), ReqType.SHOW_QUESTION)) {
+      throw new UnsupportedOperationException();
+    }
+    HashMap<String, Object> result = gameService.showQuestion(request.getGameID());
+    Question question = (Question) result.get(GameConfig.ParamName.QUESTION);
+    QShowingResponse response = new QShowingResponse(request.getGameID(), result.get(GameConfig.ParamName.CURRENT_QUESTION_CNT).toString(), question.getCategory(), question.getStatement(), question.getAnswers(), question.getTime(), result.get(GameConfig.ParamName.QUESTION_TIME_OUT).toString());
   }
 
   @MessageMapping("/answer")
   @SendToUser("/topic/game.ANSWERED")
-  public GameInitializedResponse answerGame(@Payload RequestData request) {
-    throw new UnsupportedOperationException();
+  public QAnswerResponse answerGame(@Payload RequestData request) {
+    if (!Objects.equals(request.getRequestType(), ReqType.SEND_CHOICE)) {
+      throw new UnsupportedOperationException();
+    }
+
+    AnsweringPayload payload = new Gson().fromJson(request.getPayload(), AnsweringPayload.class);
+    gameService.receiveAnswer(
+        request.getGameID(), payload.getPlayerID(), payload.getAnswerID());
+
+    return new QAnswerResponse();
   }
 
   @MessageMapping("/stats")
   @SendToUser("/topic/game.STATS")
-  public GameInitializedResponse getStats(@Payload RequestData request) {
-    throw new UnsupportedOperationException();
+  public QEndResponse getStats(@Payload RequestData request) {
+    if (!Objects.equals(request.getRequestType(), ReqType.GET_STATS)) {
+      throw new UnsupportedOperationException();
+    }
+
+    gameService.getResults(request.getGameID());
+    return new QEndResponse();
   }
 
   @MessageMapping("/rank")
   @SendToUser("/topic/game.RANK")
-  public GameInitializedResponse getRank(@Payload RequestData request) {
-    throw new UnsupportedOperationException();
+  public GameRankingResponse getRank(@Payload RequestData request) {
+    if (!Objects.equals(request.getRequestType(), ReqType.GET_RANK)) {
+      throw new UnsupportedOperationException();
+    }
+    gameService.getRanking(request.getGameID());
+    return new GameRankingResponse();
   }
 
   @MessageMapping("/end")
   @SendTo("/topic/game.ENDED")
-  public GameInitializedResponse endGame(@Payload RequestData request) {
-    throw new UnsupportedOperationException();
+  public GameFinalRankingResponse endGame(@Payload RequestData request) {
+    if (!Objects.equals(request.getRequestType(), ReqType.END_GAME)) {
+      throw new UnsupportedOperationException();
+    }
+    gameService.endGame(request.getGameID());
+    return new GameFinalRankingResponse();
   }
 
 

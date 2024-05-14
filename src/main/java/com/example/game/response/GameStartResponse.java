@@ -9,7 +9,7 @@ public class GameStartResponse extends Response {
     super();
   }
 
-  public GameStartResponse(String gameID, String gameAccessCode) {
+  public GameStartResponse(String gameID) {
     super(true, GameConfig.GAME_STARTED_CODE, "Game started successfully");
     this.gameID = gameID;
   }

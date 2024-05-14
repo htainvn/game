@@ -1,11 +1,23 @@
 package com.example.game.state;
 
+import com.example.game.config.GameConfig;
+
 public class QStatisticsState extends GameState {
   private boolean isFinal;
 
-  @Override
+    @Override
   public void toNextState(String event) {
-
+      isFinal = gameExecutor.isFinal();
+    switch (event) {
+      case GameConfig.QStatisticsStateEvent.SEND_RESULT -> {
+        System.out.println("At QStatisticsState, send result event occurred. Moving to GameEndState.");
+        if (isFinal) {
+          gameExecutor.setState(new GameEndState());
+        } else {
+          gameExecutor.setState(new GameRankingState());
+        }
+      }
+    }
   }
 
   @Override

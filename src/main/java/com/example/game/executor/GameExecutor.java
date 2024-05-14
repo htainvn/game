@@ -1,6 +1,5 @@
 package com.example.game.executor;
 
-import com.example.game.config.GameConfig.LobbyStateEvent;
 import com.example.game.state.GameEndState;
 import com.example.game.state.GameRankingState;
 import com.example.game.state.GameState;
@@ -9,8 +8,12 @@ import com.example.game.state.QAnsweringState;
 import com.example.game.state.QShowingState;
 import com.example.game.state.QStatisticsState;
 import com.example.game.strategies.GradingStrategy;
-import com.example.game.visitor.Visitor;
+import com.example.game.visitor.*;
+
 import java.util.HashMap;
+import java.util.Objects;
+import java.util.concurrent.ThreadPoolExecutor;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,14 +22,23 @@ public abstract class GameExecutor {
   @Setter
   private String gameID;
   private Integer questionCount;
-  private Integer currentQuestionIndex;
-  private Integer currentQuestionTime;
+  @Getter
+  private String currentQuestionID;
+  @Getter
+  private Integer currentQuestionCnt;
   @Getter
   private String accessCode;
+  @Getter
   @Setter
   private GameState state;
+  @Getter
   @Setter
   private GradingStrategy strategy;
+  protected Visitor visitor;
+  @Getter
+  private ThreadPoolExecutor answeringTimeoutThread;
+  // private HashMap<String, Object> players;
+  // private HashMap<String, Object> questions;
 
   public HashMap<String, Object>  execute(
       HashMap<String, Object> params
@@ -44,23 +56,24 @@ public abstract class GameExecutor {
         return result;
       }
     }
+
     if (state instanceof LobbyState) {
       executeOnlyInLobbyState(event, params);
     }
     else if (state instanceof QShowingState) {
-
+      executeOnlyInQShowingState(event, params);
     }
     else if (state instanceof QAnsweringState) {
-
+      executeOnlyInQAnsweringState(event, params);
     }
     else if (state instanceof QStatisticsState) {
-
+      executeOnlyInQStatisticsState(event, params);
     }
     else if (state instanceof GameRankingState) {
-
+      executeOnlyInGameRankingState(event, params);
     }
     else if (state instanceof GameEndState) {
-
+      executeOnlyInGameEndState(event, params);
     }
     else {
       throw new RuntimeException("Invalid state");
@@ -70,48 +83,51 @@ public abstract class GameExecutor {
     return result;
   }
 
-  private void executeOnlyInLobbyState(String event, HashMap<String, Object> params) {
-
-    if (state.IfAccept(event)) {
-      switch (event) {
-        case LobbyStateEvent.GET_ACCESS_CODE -> {
-          // do something
-        }
-        case LobbyStateEvent.REGISTER -> {
-          // do something
-        }
-      }
-    }
+  private HashMap<String, Object> executeOnlyInLobbyState(String event, HashMap<String, Object> params) {
+    this.accept(new LobbyStateVisitor());
+    visitor.getAccepted(this);
+    HashMap<String, Object> result = visitor.doWithTimeUpGame(event, params);
+    this.kick();
+    visitor.getKicked();
+    return result;
   }
 
-  private void executeOnlyInQShowingState(String event, HashMap<String, Object> params) {
-    if (state.IfAccept(event)) {
-
-    }
+  private HashMap<String, Object> executeOnlyInQShowingState(String event, HashMap<String, Object> params) {
+    this.accept(new QShowingStateVisitor());
+    visitor.getAccepted(this);
+    HashMap<String, Object> result = visitor.doWithTimeUpGame(event, params);
+    this.kick();
+    visitor.getKicked();
+    return result;
   }
 
-  private void executeOnlyInQAnsweringState(String event, HashMap<String, Object> params) {
-    if (state.IfAccept(event)) {
+  protected abstract HashMap<String, Object> executeOnlyInQAnsweringState(String event, HashMap<String, Object> params);
 
-    }
+  private HashMap<String, Object> executeOnlyInQStatisticsState(String event, HashMap<String, Object> params) {
+    this.accept(new QShowingStateVisitor());
+    visitor.getAccepted(this);
+    HashMap<String, Object> result = visitor.doWithTimeUpGame(event, params);
+    this.kick();
+    visitor.getKicked();
+    return result;
   }
 
-  private void executeOnlyInQStatisticsState(String event, HashMap<String, Object> params) {
-    if (state.IfAccept(event)) {
-
-    }
+  private HashMap<String, Object> executeOnlyInGameRankingState(String event, HashMap<String, Object> params) {
+    this.accept(new GameRankingStateVisitor());
+    visitor.getAccepted(this);
+    HashMap<String, Object> result = visitor.doWithTimeUpGame(event, params);
+    this.kick();
+    visitor.getKicked();
+    return result;
   }
 
-  private void executeOnlyInGameRankingState(String event, HashMap<String, Object> params) {
-    if (state.IfAccept(event)) {
-
-    }
-  }
-
-  private void executeOnlyInGameEndState(String event, HashMap<String, Object> params) {
-    if (state.IfAccept(event)) {
-
-    }
+  private HashMap<String, Object> executeOnlyInGameEndState(String event, HashMap<String, Object> params) {
+    this.accept(new GameEndStateVisitor());
+    visitor.getAccepted(this);
+    HashMap<String, Object> result = visitor.doWithTimeUpGame(event, params);
+    this.kick();
+    visitor.getKicked();
+    return result;
   }
 
   public void setAccessCode(String accessCode) {
@@ -121,5 +137,15 @@ public abstract class GameExecutor {
     this.accessCode = accessCode;
   }
 
-  public abstract void accept(Visitor visitor);
+  public void accept(Visitor visitor) {
+    this.visitor = visitor;
+  }
+
+  public void kick() {
+    this.visitor = null;
+  }
+
+  public boolean isFinal() {
+    return Objects.equals(currentQuestionCnt, questionCount);
+  }
 }

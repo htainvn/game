@@ -1,5 +1,7 @@
 package com.example.game.state;
 
+import com.example.game.config.GameConfig;
+
 import java.util.ArrayList;
 
 public class LobbyState extends GameState {
@@ -14,10 +16,16 @@ public class LobbyState extends GameState {
   @Override
   public void toNextState(String event) {
     switch (event) {
-      case "start_game" -> {
+      case GameConfig.LobbyStateEvent.START_GAME -> {
         System.out.println("Game started");
-        gameExecutor.setState(new LobbyState());
+        gameExecutor.setState(new QShowingState());
       }
+      case GameConfig.LobbyStateEvent.GET_ACCESS_CODE -> {
+        System.out.println("Access code is: " + gameExecutor.getAccessCode());
+      }
+        case GameConfig.LobbyStateEvent.REGISTER -> {
+          System.out.println("Player registered");
+        }
     }
   }
 

@@ -1,8 +1,12 @@
 package com.example.game.dto;
 
-import lombok.Getter;
+import lombok.*;
 
+@Setter
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class GameChoice {
   private String party_id;  // party id
   private String player_id; // player id

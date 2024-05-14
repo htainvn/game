@@ -1,6 +1,8 @@
 package com.example.game.state;
 
 import com.example.game.config.GameConfig;
+
+import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,21 +12,27 @@ public class QShowingState extends GameState {
 
   public QShowingState() {
     super();
-    ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
-    executor.execute(() -> {
-      try {
-        Thread.sleep(GameConfig.questionShowingTime * 1000);
-        this.toNextState("timeout");
-      } catch (InterruptedException e) {
-        log.atTrace().log("Thread interrupted");
-      }
-    });
   }
 
   @Override
   public void toNextState(String event) {
     switch (event) {
-      case "timeout" -> gameExecutor.setState(new QStatisticsState());
+      case GameConfig.QShowingStateEvent.TIME_OUT -> {
+        log.info("At QShowingState, time out event occurred.");
+        gameExecutor.setState(new QAnsweringState());
+      }
+      case GameConfig.QShowingStateEvent.ANSWER_QUESTION -> {
+        log.info("At QShowingState, answer question event occurred. Moving to QAnsweringState.");
+        gameExecutor.setState(new QAnsweringState());
+
+        HashMap<String, Object> params;
+        params = new HashMap<>();
+        params.put("event", GameConfig.QAnsweringStateEvent.INITIALIZE);
+        gameExecutor.execute(params);
+      }
+      case GameConfig.QShowingStateEvent.SHOW_QUESTION -> {
+          log.info("At QShowingState, show question event occurred.");
+      }
     }
   }
 

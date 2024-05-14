@@ -20,13 +20,17 @@ public class Question implements Serializable {
     @Id
     private QuestionKey qid;
 
+    @Getter
     @Column
     private String statement;
 
+    @Getter
     @Column
-    private String category;
+    private Integer category;
+    @Getter
     @Column
     private Long points;
+    @Getter
     @Column
     private Long time;
 
@@ -40,5 +44,10 @@ public class Question implements Serializable {
             }
         }
         return null;
+    }
+
+    public Long getShowingTime() {
+        Long wps = 60L;
+        return statement.length() / wps * 60 * 1000;
     }
 }

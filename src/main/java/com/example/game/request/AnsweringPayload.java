@@ -17,7 +17,7 @@ public class AnsweringPayload implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
 
-  private String name;
+  private String playerID;
   private String questionID;
-  private String answerID;
+  private Long answerID;
 }
