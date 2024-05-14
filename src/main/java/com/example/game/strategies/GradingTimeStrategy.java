@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class GradingTimeStrategy implements GradingStrategy {
-    Long calculateBonusPoint(Long time, Long totalTime, Long points) {
+    Long calculateBonusPoint(Long time, Long totalTime) {
         return points - (time * points / totalTime);
     }
 
@@ -17,7 +17,7 @@ public class GradingTimeStrategy implements GradingStrategy {
         for (GameChoice playerAnswer: playerAnswerList) {
             Score playerScore = playerScoreList.get(playerAnswer.getPlayer_id());
             if (playerAnswer.getAid().equals(question.getCorrectAnswer())) {
-                playerScore.setScore(playerScore.getScore() + calculateBonusPoint(playerAnswer.getTime(), question.getTime(), question.getPoints()));
+                playerScore.setScore(playerScore.getScore() + calculateBonusPoint(playerAnswer.getTime(), question.getTime()));
             }
         }
         return playerScoreList;

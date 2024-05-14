@@ -1,6 +1,7 @@
 package com.example.game.visitor;
 
 import com.example.game.config.GameConfig;
+import com.example.game.entities.GameQuestionDto;
 import com.example.game.entities.Question;
 import com.example.game.executor.GameExecutor;
 
@@ -9,22 +10,20 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class QShowingStateVisitor extends Visitor{
+    private Long getShowingTime(GameQuestionDto question) {
+        Long wps = 60L;
+        return question.question.length() / wps * 60 * 1000;
+    }
+
     @Override
     public HashMap<String, Object> doWithTimeUpGame(String event, HashMap<String, Object> params) {
-        GameExecutor gameExecutor =
-                params.get("gameExecutor") instanceof GameExecutor ?
-                        (GameExecutor) params.get("gameExecutor") :
-                        null;
-        if (gameExecutor == null) {
-            return null;
-        }
         HashMap<String, Object> result = new HashMap<>();
 
         switch (event) {
             case GameConfig.QShowingStateEvent.SHOW_QUESTION -> {
+                ThreadPoolExecutor executor = gameExecutor.getTimeoutThread();
                 System.out.println("At QShowingState, show question event occurred. Moving to QAnsweringState.");
                 int time = (int) params.get("time");
-                ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
                 executor.execute(() -> {
                     try {
                         Thread.sleep(time * 1000L);
@@ -37,9 +36,9 @@ public class QShowingStateVisitor extends Visitor{
                     }
                 });
                 // get question and return
-                Question question = new Question();
+                GameQuestionDto question = new GameQuestionDto();
                 result.put(GameConfig.ParamName.QUESTION, question);
-                result.put(GameConfig.ParamName.QUESTION_TIME_OUT, question.getShowingTime());
+                result.put(GameConfig.ParamName.QUESTION_TIME_OUT, getShowingTime(question));
                 result.put(GameConfig.ParamName.CURRENT_QUESTION_CNT, gameExecutor.getCurrentQuestionCnt());
                 return result;
             }

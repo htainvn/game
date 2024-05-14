@@ -62,5 +62,7 @@ public class GameConfig {
     public static final String CURRENT_QUESTION_CNT = "current_question_cnt";
     public static final String GAME_EXECUTOR = "game_executor";
     public static final String ANSWERING_TIMEOUT = "answeringTimeout";
+    public static final String TIMEOUT_THREAD = "timeout_thread";
+    public static final String ANSWERED_TIME = "answered_time";
   }
 }

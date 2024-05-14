@@ -2,14 +2,17 @@ package com.example.game.entities;
 
 import java.util.ArrayList;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import com.example.game.dto.OriginalQuestionDto;
 
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
 public class GameQuestionDto {
   public int index;
   public String question;
+  private Long time;
   public ArrayList<GameAnswerDto> answers;
 
   public GameQuestionDto(OriginalQuestionDto data) {
@@ -27,6 +30,7 @@ public class GameQuestionDto {
         "index=" + index +
         ", question='" + question + '\'' +
         ", answers=" + answers +
+        ", time=" + time +
         '}';
   }
 
@@ -39,6 +43,6 @@ public class GameQuestionDto {
       return false;
     }
     GameQuestionDto that = (GameQuestionDto) obj;
-    return index == that.index && question.equals(that.question) && answers.equals(that.answers);
+    return index == that.index && question.equals(that.question) && answers.equals(that.answers) && time.equals(that.time);
   }
 }

@@ -13,7 +13,7 @@ public class GradingEqualStrategy implements GradingStrategy {
         for (GameChoice playerAnswer: playerAnswerList) {
             Score playerScore = playerScoreList.get(playerAnswer.getPlayer_id());
             if (playerAnswer.getAid().equals(question.getCorrectAnswer())) {
-                playerScore.setScore(playerScore.getScore() + question.getPoints());
+                playerScore.setScore(playerScore.getScore() + points);
             }
         }
         return playerScoreList;

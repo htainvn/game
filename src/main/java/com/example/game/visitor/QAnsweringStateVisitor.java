@@ -14,13 +14,12 @@ public class QAnsweringStateVisitor extends Visitor{
 
     @Override
     public HashMap<String, Object> doWithTimeUpGame(String event, HashMap<String, Object> params) {
-        ThreadPoolExecutor executor = gameExecutor.getAnsweringTimeoutThread();
 
         switch (event) {
             case GameConfig.QAnsweringStateEvent.INITIALIZE -> {
+                ThreadPoolExecutor executor = gameExecutor.getTimeoutThread();
                 System.out.println("At QAnsweringState, initialize event occurred.");
                 int time = (int) params.get("time");
-                executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
                 executor.execute(() -> {
                     try {
                         Thread.sleep(time * 1000L);
@@ -38,7 +37,8 @@ public class QAnsweringStateVisitor extends Visitor{
                 ChoiceDictionary choices = (ChoiceDictionary) params.get(GameConfig.ParamName.CHOICE_DICTIONARY);
                 String player_id = (String) params.get(GameConfig.ParamName.PLAYER_ID);
                 Long answer_id = (Long) params.get(GameConfig.ParamName.ANSWER_ID);
-                choices.addChoice(new GameChoice(gameExecutor.getGameID(), player_id, gameExecutor.
+                Long time = (Long) params.get(GameConfig.ParamName.ANSWERED_TIME);
+                choices.addChoice(new GameChoice(gameExecutor.getGameID(), player_id, gameExecutor.getCurrentQuestionID(), answer_id, time));
             }
             case GameConfig.QAnsweringStateEvent.TIME_OUT -> {
                 System.out.println("At QAnsweringState, timeout event occurred. Moving to QStatisticsState.");
@@ -48,6 +48,7 @@ public class QAnsweringStateVisitor extends Visitor{
                 System.out.println("At QAnsweringState, exceed max correct event occurred but nothing happened because of using TimeUpGame.");
             }
             case GameConfig.QAnsweringStateEvent.SKIP -> {
+                ThreadPoolExecutor executor = gameExecutor.getTimeoutThread();
                 System.out.println("At QAnsweringState, skip event occurred. Moving to QStatisticsState.");
                 if (executor != null) {
                     executor.shutdownNow();
@@ -55,20 +56,11 @@ public class QAnsweringStateVisitor extends Visitor{
                 gameExecutor.setState(new QStatisticsState());
             }
         }
+        return null;
     }
 
     @Override
     public HashMap<String, Object> doWithMaxCorrectGame(String event, HashMap<String, Object> params) {
-        GameExecutor gameExecutor = params.get("gameExecutor")
-                                    instanceof GameExecutor ?
-                                        (GameExecutor) params.get("gameExecutor") :
-                                        null;
-        if (gameExecutor == null) {
-            return;
-        }
-        ThreadPoolExecutor executor = params.get("answeringTimeout") instanceof ThreadPoolExecutor ? (ThreadPoolExecutor) params.get("answeringTimeout") : null;
-
-
         switch (event) {
             case GameConfig.QAnsweringStateEvent.INITIALIZE -> {
                 System.out.println("At QAnsweringState, initialize event occurred.");
@@ -91,6 +83,7 @@ public class QAnsweringStateVisitor extends Visitor{
                 gameExecutor.setState(new QStatisticsState());
             }
             case GameConfig.QAnsweringStateEvent.SKIP -> {
+                ThreadPoolExecutor executor = gameExecutor.getTimeoutThread();
                 System.out.println("At QAnsweringState, skip event occurred. Moving to QStatisticsState.");
                 if (executor != null) {
                     executor.shutdownNow();
@@ -98,5 +91,6 @@ public class QAnsweringStateVisitor extends Visitor{
                 gameExecutor.setState(new QStatisticsState());
             }
         }
+        return null;
     }
 }

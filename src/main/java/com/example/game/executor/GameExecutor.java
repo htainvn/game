@@ -1,5 +1,6 @@
 package com.example.game.executor;
 
+import com.example.game.config.GameConfig;
 import com.example.game.state.GameEndState;
 import com.example.game.state.GameRankingState;
 import com.example.game.state.GameState;
@@ -12,6 +13,7 @@ import com.example.game.visitor.*;
 
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import lombok.Getter;
@@ -36,7 +38,7 @@ public abstract class GameExecutor {
   private GradingStrategy strategy;
   protected Visitor visitor;
   @Getter
-  private ThreadPoolExecutor answeringTimeoutThread;
+  private ThreadPoolExecutor timeoutThread = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
   // private HashMap<String, Object> players;
   // private HashMap<String, Object> questions;
 

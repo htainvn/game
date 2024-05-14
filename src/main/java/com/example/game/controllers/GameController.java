@@ -2,6 +2,7 @@ package com.example.game.controllers;
 
 import com.example.game.config.GameConfig;
 import com.example.game.constant.ReqType;
+import com.example.game.entities.GameQuestionDto;
 import com.example.game.entities.Question;
 import com.example.game.request.AnsweringPayload;
 import com.example.game.request.GInitializeRequest;
@@ -75,8 +76,17 @@ public class GameController {
       throw new UnsupportedOperationException();
     }
     HashMap<String, Object> result = gameService.showQuestion(request.getGameID());
-    Question question = (Question) result.get(GameConfig.ParamName.QUESTION);
-    QShowingResponse response = new QShowingResponse(request.getGameID(), result.get(GameConfig.ParamName.CURRENT_QUESTION_CNT).toString(), question.getCategory(), question.getStatement(), question.getAnswers(), question.getTime(), result.get(GameConfig.ParamName.QUESTION_TIME_OUT).toString());
+    GameQuestionDto question = (GameQuestionDto) result.get(GameConfig.ParamName.QUESTION);
+    QShowingResponse response = new QShowingResponse(
+            request.getGameID(),
+            (Integer) result.get(GameConfig.ParamName.CURRENT_QUESTION_CNT),
+            question.getQuestion(),
+            question.getAnswers().toString(),
+            question.getTime(),
+            (Integer) result.get(
+                    GameConfig.ParamName.QUESTION_TIME_OUT
+            ));
+    return response;
   }
 
   @MessageMapping("/answer")

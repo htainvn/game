@@ -26,12 +26,6 @@ public class Question implements Serializable {
 
     @Getter
     @Column
-    private Integer category;
-    @Getter
-    @Column
-    private Long points;
-    @Getter
-    @Column
     private Long time;
 
     @OneToMany(mappedBy = "question")
@@ -44,10 +38,5 @@ public class Question implements Serializable {
             }
         }
         return null;
-    }
-
-    public Long getShowingTime() {
-        Long wps = 60L;
-        return statement.length() / wps * 60 * 1000;
     }
 }

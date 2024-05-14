@@ -12,7 +12,6 @@ import lombok.Setter;
 public class QShowingResponse extends Response {
   private String gameID;
   private Integer questionNumber;
-  private Integer questionType;
   private String data;
   private String answer;
   private Integer timeLimit;

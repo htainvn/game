@@ -18,7 +18,7 @@ public class GradingDifficultyStrategy implements GradingStrategy{
             }
         }
 
-        Long bonusScore = question.getPoints() / playerAnswerList.size() * countCorrectAnswer;
+        Long bonusScore = points / playerAnswerList.size() * countCorrectAnswer;
         for (GameChoice playerAnswer: playerAnswerList) {
             Score playerScore = playerScoreList.get(playerAnswer.getPlayer_id());
             if (playerAnswer.getAid().equals(question.getCorrectAnswer())) {
