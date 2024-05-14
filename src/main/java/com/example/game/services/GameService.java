@@ -4,9 +4,7 @@ import com.example.game.config.GameConfig;
 import com.example.game.config.GameConfig.EmptyGameStateEvent;
 import com.example.game.config.GameConfig.GameEndStateEvent;
 import com.example.game.config.GameConfig.ParamName;
-import com.example.game.datacontainer.ChoiceDictionary;
-import com.example.game.datacontainer.PlayerDictionary;
-import com.example.game.datacontainer.ScoreDictionary;
+import com.example.game.datacontainer.*;
 import com.example.game.dto.OriginalQuizDto;
 import com.example.game.entities.GameQuizDto;
 import com.example.game.executor.GameExecutor;
@@ -22,18 +20,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class GameService {
   private HashMap<String, GameExecutor> games = new HashMap<>();
-  private PlayerDictionary players;
-  private ChoiceDictionary choices;
-  private ScoreDictionary scores;
+  private TempPlayerDictionary players;
+  private TempChoiceDictionary choices;
+  private TempScoreDictionary scores;
 
   private DataService dataService;
 
   @Autowired
-  public GameService(DataService dataService, PlayerDictionary players, ChoiceDictionary choices, ScoreDictionary scores) {
+  public GameService(DataService dataService) {
     this.dataService = dataService;
-    this.players = players;
-    this.choices = choices;
-    this.scores = scores;
   }
 
   public Pair<String, String> /* <party_id, access_code> */ createGame(
@@ -77,16 +72,18 @@ public class GameService {
     }
   }
 
-  public void endGame(
+  public HashMap<String, Object> endGame(
       String party_id
   ) {
     GameExecutor game = games.get(party_id);
     HashMap<String, Object> params = new HashMap<>();
     params.put(ParamName.EVENT, GameEndStateEvent.GET_FINAL_RANK);
+    params.put(ParamName.SCORE_DICTIONARY, scores);
     HashMap<String, Object> result = game.execute(params);
     if (!result.get("status").equals("success")) {
       throw new UnsupportedOperationException();
     }
+    return result;
   }
 
   public Pair<String, String>/* < status, player_id > */ registerPlayerToGame(
@@ -97,6 +94,7 @@ public class GameService {
     HashMap<String, Object> params = new HashMap<>();
     params.put(ParamName.EVENT, GameConfig.LobbyStateEvent.REGISTER);
     params.put(ParamName.NAME, player_name);
+    params.put(ParamName.PLAYER_DICTIONARY, players);
     HashMap<String, Object> result = game.execute(params);
 //    if (!result.get("status").equals("success")) {
 //      throw new UnsupportedOperationException();
@@ -120,16 +118,16 @@ public class GameService {
     return response;
   }
 
-  public void answerQuestion(
-      String party_id) {
-    GameExecutor game = games.get(party_id);
-    HashMap<String, Object> params = new HashMap<>();
-    params.put(ParamName.EVENT, GameConfig.QShowingStateEvent.ANSWER_QUESTION);
-    HashMap<String, Object> result = game.execute(params);
-    if (!result.get("status").equals("success")) {
-      throw new UnsupportedOperationException();
-    }
-  }
+//  public void answerQuestion(
+//      String party_id) {
+//    GameExecutor game = games.get(party_id);
+//    HashMap<String, Object> params = new HashMap<>();
+//    params.put(ParamName.EVENT, GameConfig.QShowingStateEvent.ANSWER_QUESTION);
+//    HashMap<String, Object> result = game.execute(params);
+//    if (!result.get("status").equals("success")) {
+//      throw new UnsupportedOperationException();
+//    }
+//  }
 
   public void receiveAnswer(
       String party_id,
@@ -158,7 +156,7 @@ public class GameService {
     }
   }
 
-  public void getResults(String party_id) {
+  public HashMap<String, Object> getResults(String party_id) {
     GameExecutor game = games.get(party_id);
     HashMap<String, Object> params = new HashMap<>();
     params.put(ParamName.EVENT, GameConfig.QStatisticsStateEvent.SEND_RESULT);
@@ -169,18 +167,18 @@ public class GameService {
     if (!result.get("status").equals("success")) {
       throw new UnsupportedOperationException();
     }
+    return result;
   }
 
-  public void getRanking(String party_id) {
+  public HashMap<String, Object> getRanking(String party_id) {
     GameExecutor game = games.get(party_id);
     HashMap<String, Object> params = new HashMap<>();
-    if (game.isFinal())
-      params.put(ParamName.EVENT, GameConfig.GameEndStateEvent.GET_FINAL_RANK);
-    else
-      params.put(ParamName.EVENT, GameConfig.GameRankingStateEvent.GET_RANKING);
+    params.put(ParamName.SCORE_DICTIONARY, scores);
+    params.put(ParamName.EVENT, GameConfig.GameRankingStateEvent.GET_RANKING);
     HashMap<String, Object> result = game.execute(params);
     if (!result.get("status").equals("success")) {
       throw new UnsupportedOperationException();
     }
+    return result;
   }
 }

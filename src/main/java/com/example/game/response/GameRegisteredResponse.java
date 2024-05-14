@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class GameRegisteredResponse extends Response {
-    private String status;
+    private String registerStatus;
     private String player_id;
 
 public GameRegisteredResponse() {
@@ -16,7 +16,7 @@ public GameRegisteredResponse() {
 
     public GameRegisteredResponse(String status, String player_id) {
         super(true, GameConfig.PLAYER_REGISTERED_CODE, "Player registered successfully");
-        this.status = status;
+        this.registerStatus = status;
         this.player_id = player_id;
     }
 }

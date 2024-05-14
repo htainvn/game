@@ -12,5 +12,5 @@ public class GameChoice {
   private String player_id; // player id
   private String qid;       // question id
   private Long aid;         // answer id
-  private Long time;        // time submitted
+  private Integer time;        // time submitted
 }

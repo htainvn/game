@@ -1,5 +1,6 @@
 package com.example.game.factory;
 
+import com.example.game.config.GameConfig;
 import com.example.game.executor.GameExecutor;
 import com.example.game.executor.MaxCorrectGameExecutor;
 import com.example.game.executor.TimeUpGameExecutor;
@@ -20,9 +21,9 @@ public class GameFactory {
   /* Factory + Builder */
   public static GameExecutor createGame(String gameFlowMode, String gradingStrategy) {
     GameExecutor product;
-    if (Objects.equals(gameFlowMode, "MAX_CORRECT")) {
+    if (Objects.equals(gameFlowMode, GameConfig.GameFlowType.MAX_CORRECT)) {
       product = new MaxCorrectGameExecutor();
-    } else if (Objects.equals(gameFlowMode, "TIME_UP")) {
+    } else if (Objects.equals(gameFlowMode, GameConfig.GameFlowType.TIME_UP)) {
       product = new TimeUpGameExecutor();
     } else {
       throw new UnsupportedOperationException();
@@ -30,13 +31,13 @@ public class GameFactory {
     product.setGameID(UUID.randomUUID().toString());
     product.setState(new EmptyGameState());
     switch (gradingStrategy) {
-      case "TIME":
+      case GameConfig.GradingStrategyType.TIME:
         product.setStrategy(new GradingTimeStrategy());
         break;
-      case "DIFFICULTY":
+      case GameConfig.GradingStrategyType.DIFFICULTY:
         product.setStrategy(new GradingDifficultyStrategy());
         break;
-      case "EQUAL":
+      case GameConfig.GradingStrategyType.EQUAL:
         product.setStrategy(new GradingEqualStrategy());
         break;
       default:

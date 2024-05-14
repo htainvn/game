@@ -26,7 +26,7 @@ public class Question implements Serializable {
 
     @Getter
     @Column
-    private Long time;
+    private Integer time;
 
     @OneToMany(mappedBy = "question")
     private List<Answer> answers;

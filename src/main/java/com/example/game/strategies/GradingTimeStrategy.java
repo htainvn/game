@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class GradingTimeStrategy implements GradingStrategy {
-    Long calculateBonusPoint(Long time, Long totalTime) {
+    Long calculateBonusPoint(Integer time, Integer totalTime) {
         return points - (time * points / totalTime);
     }
 

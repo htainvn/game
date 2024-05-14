@@ -1,8 +1,8 @@
 package com.example.game.visitor;
 
 import com.example.game.config.GameConfig;
-import com.example.game.datacontainer.ChoiceDictionary;
-import com.example.game.datacontainer.ScoreDictionary;
+import com.example.game.datacontainer.TempChoiceDictionary;
+import com.example.game.datacontainer.TempScoreDictionary;
 import com.example.game.entities.Question;
 import com.example.game.entities.Score;
 import com.example.game.strategies.GradingStrategy;
@@ -10,8 +10,13 @@ import com.example.game.strategies.GradingStrategy;
 import java.util.HashMap;
 
 public class QStatisticsStateVisitor extends Visitor{
-    public void calculateScore(String party_id, Question question, GradingStrategy strategy, ChoiceDictionary choices, ScoreDictionary scores) {
-        
+    public void calculateScore(
+            String party_id,
+            Question question,
+            GradingStrategy strategy,
+            TempChoiceDictionary choices,
+            TempScoreDictionary scores
+    ) {
         HashMap<String, Score> playerScoreList = strategy.calculateScore(
                 question,
                 choices.getChoices(
@@ -28,17 +33,22 @@ public class QStatisticsStateVisitor extends Visitor{
             case GameConfig.QStatisticsStateEvent.SEND_RESULT -> {
                 System.out.println("At QStatisticsState, send result event occurred.");
 
-                ChoiceDictionary choices = (ChoiceDictionary) params.get("choices");
-                ScoreDictionary scores = (ScoreDictionary) params.get("scores");
+                TempChoiceDictionary choices = (TempChoiceDictionary) params.get(GameConfig.ParamName.CHOICE_DICTIONARY);
+                TempScoreDictionary scores = (TempScoreDictionary) params.get(GameConfig.ParamName.SCORE_DICTIONARY);
 
                 calculateScore(
-                        (String) params.get(GameConfig.ParamName.PLAYER_ID),
+                        gameExecutor.getGameID(),
                         (Question) params.get(GameConfig.ParamName.QUESTION),
                         (GradingStrategy) params.get(GameConfig.ParamName.GRADING_STRATEGY),
                         choices,
                         scores
                 );
                 // TO DO
+                HashMap<String, Object> result = new HashMap<>();
+                result.put(GameConfig.ParamName.CHOICE_DICTIONARY, scores.getScore(
+                        gameExecutor.getGameID()
+                ));
+                return result;
             }
         }
         return null;

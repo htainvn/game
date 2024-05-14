@@ -3,7 +3,6 @@ package com.example.game.controllers;
 import com.example.game.config.GameConfig;
 import com.example.game.constant.ReqType;
 import com.example.game.entities.GameQuestionDto;
-import com.example.game.entities.Question;
 import com.example.game.request.AnsweringPayload;
 import com.example.game.request.GInitializeRequest;
 import com.example.game.request.RegisterPayload;
@@ -31,9 +30,17 @@ public class GameController {
   @Autowired
   private GameService gameService;
 
+  @MessageMapping("/")
+  @SendToUser("/topic/game")
+  public Response test() {
+    System.out.println("Connected");
+    return new Response();
+  }
+
   @MessageMapping("/initialize")
-  @SendToUser("/topic/game.INITIALIZED")
+  @SendTo("/topic/game.INITIALIZED")
   public GameInitializedResponse initializeGame(@Payload GInitializeRequest request) {
+    System.out.println("Receive Initialized Request");
     Pair<String, String> gameInf = gameService.createGame(
         request.getQuizID(),
         request.getAuthID(),
@@ -42,6 +49,7 @@ public class GameController {
     );
 
     return new GameInitializedResponse(gameInf.getValue0(), gameInf.getValue1());
+//    return new GameInitializedResponse("gameID", "accessCode");
   }
   @MessageMapping("/register")
   @SendToUser("/topic/game.REGISTERED")
@@ -103,6 +111,17 @@ public class GameController {
     return new QAnswerResponse();
   }
 
+  @MessageMapping("/skip-question")
+  @SendToUser("/topic/game.SKIPPED")
+  public Response skipQuestion(@Payload RequestData request) {
+    if (!Objects.equals(request.getRequestType(), ReqType.SKIP_QUESTION)) {
+      throw new UnsupportedOperationException();
+    }
+
+    gameService.skipQuestion(request.getGameID());
+    return new Response();
+  }
+
   @MessageMapping("/stats")
   @SendToUser("/topic/game.STATS")
   public QEndResponse getStats(@Payload RequestData request) {
@@ -110,8 +129,13 @@ public class GameController {
       throw new UnsupportedOperationException();
     }
 
-    gameService.getResults(request.getGameID());
-    return new QEndResponse();
+    HashMap<String, Object> result = gameService.getResults(request.getGameID());
+    QEndResponse response =
+            new QEndResponse(
+                    request.getGameID(),
+                    result.get(GameConfig.ParamName.CHOICE_DICTIONARY).toString()
+            );
+    return response;
   }
 
   @MessageMapping("/rank")
@@ -120,8 +144,13 @@ public class GameController {
     if (!Objects.equals(request.getRequestType(), ReqType.GET_RANK)) {
       throw new UnsupportedOperationException();
     }
-    gameService.getRanking(request.getGameID());
-    return new GameRankingResponse();
+    HashMap<String, Object> result = gameService.getRanking(request.getGameID());
+    GameRankingResponse response =
+            new GameRankingResponse(
+                    request.getGameID(),
+                    result.get(GameConfig.ParamName.SCORE_DICTIONARY).toString()
+            );
+    return response;
   }
 
   @MessageMapping("/end")
@@ -130,9 +159,13 @@ public class GameController {
     if (!Objects.equals(request.getRequestType(), ReqType.END_GAME)) {
       throw new UnsupportedOperationException();
     }
-    gameService.endGame(request.getGameID());
-    return new GameFinalRankingResponse();
+    HashMap<String, Object> result = gameService.endGame(request.getGameID());
+    GameFinalRankingResponse response =
+            new GameFinalRankingResponse(
+                    request.getGameID(),
+                    result.get(GameConfig.ParamName.SCORE_DICTIONARY).toString()
+            );
+    return response;
   }
-
 
 }

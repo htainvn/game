@@ -12,7 +12,7 @@ import com.example.game.dto.OriginalQuestionDto;
 public class GameQuestionDto {
   public int index;
   public String question;
-  private Long time;
+  private Integer time;
   public ArrayList<GameAnswerDto> answers;
 
   public GameQuestionDto(OriginalQuestionDto data) {

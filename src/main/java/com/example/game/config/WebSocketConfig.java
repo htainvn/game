@@ -9,7 +9,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    String allowedOrigins = "http://localhost:3001";
+    String allowedOrigins = "http://localhost:3000";
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {

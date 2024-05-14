@@ -1,6 +1,6 @@
 package com.example.game.services;
 
-import com.example.game.constant.GradingStrategyType;
+import com.example.game.config.GameConfig;
 import com.example.game.datacontainer.ChoiceDictionary;
 import com.example.game.datacontainer.PlayerDictionary;
 import com.example.game.datacontainer.ScoreDictionary;
@@ -55,13 +55,13 @@ public class GActionService implements GActionInterface {
     strategy = strategy.toLowerCase();
 
     switch (strategy) {
-      case GradingStrategyType.TIME:
+      case GameConfig.GradingStrategyType.TIME:
         scoringStrategy = new GradingTimeStrategy();
         break;
-      case GradingStrategyType.EQUAL:
+      case GameConfig.GradingStrategyType.EQUAL:
         scoringStrategy = new GradingEqualStrategy();
         break;
-      case GradingStrategyType.DIFFICULTY:
+      case GameConfig.GradingStrategyType.DIFFICULTY:
         scoringStrategy = new GradingDifficultyStrategy();
         break;
       default:

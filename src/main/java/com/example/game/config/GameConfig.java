@@ -12,6 +12,18 @@ public class GameConfig {
   public static final int PLAYER_REGISTERED_CODE = 24;
   public static final int CODE_LENGTH = 7;
 
+  public class GameFlowType {
+    public static final String MAX_CORRECT = "max_correct";
+    public static final String TIME_UP = "time_up";
+  }
+
+  public class GradingStrategyType {
+    public static final String TIME = "time";
+    public static final String EQUAL = "equal";
+    public static final String DIFFICULTY = "difficulty";
+  }
+
+
   public static class EmptyGameStateEvent {
     public static final String BIND = "bind";
   }
@@ -52,16 +64,18 @@ public class GameConfig {
     public static final String EVENT = "event";
     public static final String DATA = "data";
     public static final String NAME = "name";
+    public static final String PARTY_ID = "party_id";
     public static final String PLAYER_ID = "player_id";
     public static final String ANSWER_ID = "answer_id";
     public static final String CHOICE_DICTIONARY = "choice_dictionary";
     public static final String SCORE_DICTIONARY = "score_dictionary";
+    public static final String PLAYER_DICTIONARY = "player_dictionary";
     public static final String GRADING_STRATEGY = "grading_strategy";
     public static final String QUESTION = "question";
     public static final String QUESTION_TIME_OUT = "question_time_out";
     public static final String CURRENT_QUESTION_CNT = "current_question_cnt";
     public static final String GAME_EXECUTOR = "game_executor";
-    public static final String ANSWERING_TIMEOUT = "answeringTimeout";
+    public static final String ANSWERING_TIMEOUT = "answering_timeout";
     public static final String TIMEOUT_THREAD = "timeout_thread";
     public static final String ANSWERED_TIME = "answered_time";
   }

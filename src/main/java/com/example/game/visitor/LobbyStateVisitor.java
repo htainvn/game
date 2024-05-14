@@ -1,6 +1,8 @@
 package com.example.game.visitor;
 
 import com.example.game.config.GameConfig;
+import com.example.game.datacontainer.TempPlayerDictionary;
+import com.example.game.entities.Player;
 
 import java.util.HashMap;
 
@@ -18,6 +20,11 @@ public class LobbyStateVisitor extends Visitor {
             }
             case GameConfig.LobbyStateEvent.REGISTER -> {
                 System.out.println("At LobbyState, register event occurred.");
+                TempPlayerDictionary playerDictionary =
+                        (TempPlayerDictionary) params.get(GameConfig.ParamName.PLAYER_DICTIONARY);
+                // TODO: Where can I get the Session field?
+                Player newPlayer = new Player(gameExecutor.getGameID(), params.get(GameConfig.ParamName.NAME).toString(), null);
+                playerDictionary.registerPlayer(gameExecutor.getGameID(), newPlayer);
             }
         }
         return null;

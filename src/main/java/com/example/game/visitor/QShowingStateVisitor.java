@@ -10,8 +10,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class QShowingStateVisitor extends Visitor{
-    private Long getShowingTime(GameQuestionDto question) {
-        Long wps = 60L;
+    private Integer getShowingTime(GameQuestionDto question) {
+        Integer wps = 60;
         return question.question.length() / wps * 60 * 1000;
     }
 
@@ -32,7 +32,7 @@ public class QShowingStateVisitor extends Visitor{
                         new_params.put("event", GameConfig.QShowingStateEvent.TIME_OUT);
                         gameExecutor.execute(new_params);
                     } catch (InterruptedException e) {
-                        System.out.println("Thread interrupted");
+                        System.out.println("Thread Showing interrupted");
                     }
                 });
                 // get question and return
