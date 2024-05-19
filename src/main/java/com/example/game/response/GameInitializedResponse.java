@@ -20,4 +20,12 @@ public class GameInitializedResponse extends Response {
     this.gameID = gameID;
     this.gameAccessCode = gameAccessCode;
   }
+
+  @Override
+  public String toString() {
+    return "GameInitializedResponse{" +
+        "gameID='" + gameID + '\'' +
+        ", gameAccessCode='" + gameAccessCode + '\'' +
+        '}';
+  }
 }

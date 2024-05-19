@@ -15,11 +15,11 @@ public class GameQuestionDto {
   private Integer time;
   public ArrayList<GameAnswerDto> answers;
 
-  public GameQuestionDto(OriginalQuestionDto data) {
-    this.index = data.index;
-    this.question = data.question;
+ public GameQuestionDto(Question data) {
+    this.index = Math.toIntExact(data.getQid());
+    this.question = data.getStatement();
     this.answers = new ArrayList<>();
-    data.answers.forEach((answer) -> {
+    data.getAnswers().forEach((answer) -> {
       this.answers.add(new GameAnswerDto(answer));
     });
   }

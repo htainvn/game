@@ -10,7 +10,7 @@ public class GameStartResponse extends Response {
   }
 
   public GameStartResponse(String gameID) {
-    super(true, GameConfig.GAME_STARTED_CODE, "Game started successfully");
+    super(true, GameConfig.GAME_STARTED_CODE, "Game is allowed to start.");
     this.gameID = gameID;
   }
 }

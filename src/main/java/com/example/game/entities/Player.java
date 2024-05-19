@@ -21,6 +21,4 @@ public class Player implements Serializable {
   private String pid; //party id
 
   private String name;
-
-  private Session session;
 }

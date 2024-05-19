@@ -1,0 +1,52 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+  xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="1715965906865-1" author="hoangtheanh (generated)">
+        <createTable tableName="game">
+            <column name="game_id" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_game"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1715965906865-2" author="hoangtheanh (generated)">
+        <createTable tableName="ganswer">
+            <column name="aid" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_ganswer"/>
+            </column>
+            <column name="content" type="VARCHAR(255)"/>
+            <column name="is_correct" type="BOOLEAN"/>
+            <column name="qid" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_ganswer"/>
+            </column>
+            <column name="game_id" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_ganswer"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1715965906865-3" author="hoangtheanh (generated)">
+        <createTable tableName="gquestion">
+            <column name="qid" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_gquestion"/>
+            </column>
+            <column name="statement" type="VARCHAR(255)"/>
+            <column name="time" type="INT"/>
+            <column name="game_id" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_gquestion"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1715965906865-4" author="hoangtheanh (generated)">
+        <addForeignKeyConstraint baseColumnNames="qid,game_id" baseTableName="ganswer"
+          constraintName="FK_GANSWER_ON_QIGAID" referencedColumnNames="qid,game_id"
+          referencedTableName="gquestion"/>
+    </changeSet>
+    <changeSet id="1715965906865-5" author="hoangtheanh (generated)">
+        <addForeignKeyConstraint baseColumnNames="game_id" baseTableName="gquestion"
+          constraintName="FK_GQUESTION_ON_GAME" referencedColumnNames="game_id"
+          referencedTableName="game"/>
+    </changeSet>
+</databaseChangeLog>

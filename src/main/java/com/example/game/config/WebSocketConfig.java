@@ -1,5 +1,6 @@
 package com.example.game.config;
 
+import com.example.game.security.GameHandshakeHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -14,6 +15,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
+                .setHandshakeHandler(new GameHandshakeHandler())
                 .setAllowedOriginPatterns("*");
         registry.addEndpoint("/socketjs")
             //.setAllowedOrigins(allowedOrigins)
@@ -23,7 +25,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic");
+        config.enableSimpleBroker("/topic", "/queue");
+        config.setUserDestinationPrefix("/user");
         config.setApplicationDestinationPrefixes("/app");
     }
 }

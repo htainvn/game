@@ -1,6 +1,10 @@
 package com.example.game.executor;
 
 import com.example.game.config.GameConfig;
+import com.example.game.config.GameConfig.ParamName;
+import com.example.game.model.GameSettingsModel;
+import com.example.game.services.DataService;
+import com.example.game.state.EmptyGameState;
 import com.example.game.state.GameEndState;
 import com.example.game.state.GameRankingState;
 import com.example.game.state.GameState;
@@ -18,16 +22,22 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
 
 public abstract class GameExecutor {
   @Getter
   @Setter
   private String gameID;
+  @Getter
+  @Setter
   private Integer questionCount;
   @Getter
-  private String currentQuestionID;
+  @Setter
+  private Long currentQuestionID;
   @Getter
-  private Integer currentQuestionCnt;
+  @Setter
+  private Long currentQuestionCnt;
   @Getter
   private String accessCode;
   @Getter
@@ -36,11 +46,22 @@ public abstract class GameExecutor {
   @Getter
   @Setter
   private GradingStrategy strategy;
-  protected Visitor visitor;
   @Getter
   private ThreadPoolExecutor timeoutThread = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
   // private HashMap<String, Object> players;
   // private HashMap<String, Object> questions;
+  private final DataService dataService;
+  private final SimpUserRegistry simpUserRegistry;
+  protected Visitor visitor;
+  private GameSettingsModel settings;
+  @Autowired
+  protected GameExecutor(
+      DataService dataService,
+      SimpUserRegistry simpUserRegistry
+  ) {
+    this.dataService = dataService;
+    this.simpUserRegistry = simpUserRegistry;
+  }
 
   public HashMap<String, Object>  execute(
       HashMap<String, Object> params
@@ -58,39 +79,85 @@ public abstract class GameExecutor {
         return result;
       }
     }
-
-    if (state instanceof LobbyState) {
-      executeOnlyInLobbyState(event, params);
+    HashMap<String, Object> tmp_result;
+    if (state instanceof EmptyGameState) {
+      tmp_result = executeOnlyInEmptyGameState(event, params);
+    }
+    else if (state instanceof LobbyState) {
+      tmp_result = executeOnlyInLobbyState(event, params);
     }
     else if (state instanceof QShowingState) {
-      executeOnlyInQShowingState(event, params);
+      tmp_result = executeOnlyInQShowingState(event, params);
     }
     else if (state instanceof QAnsweringState) {
-      executeOnlyInQAnsweringState(event, params);
+      tmp_result = executeOnlyInQAnsweringState(event, params);
     }
     else if (state instanceof QStatisticsState) {
-      executeOnlyInQStatisticsState(event, params);
+      tmp_result = executeOnlyInQStatisticsState(event, params);
     }
     else if (state instanceof GameRankingState) {
-      executeOnlyInGameRankingState(event, params);
+      tmp_result = executeOnlyInGameRankingState(event, params);
     }
     else if (state instanceof GameEndState) {
-      executeOnlyInGameEndState(event, params);
+      tmp_result = executeOnlyInGameEndState(event, params);
     }
     else {
       throw new RuntimeException("Invalid state");
     }
+    tmp_result.forEach((key, value) -> {
+      if (key.equals(ParamName.STATUS_PR) && value.equals("failed")) {
+        result.put(ParamName.STATUS_PR, value);
+      }
+      else {
+        if (result.containsKey(key)) {
+          throw new RuntimeException("Duplicated key");
+        }
+        else {
+          result.put(key, value);
+        }
+      }
+    });
     result.put("state", state);
-    result.put("status", "success");
+    result.put(ParamName.STATUS_PR, "success");
+    return result;
+  }
+
+  private HashMap<String, Object> executeOnlyInEmptyGameState(String event, HashMap<String, Object> params) {
+    this.accept(new EmptyGameStateVisitor());
+    visitor.getAccepted(this);
+    params.put(ParamName.DATA_SERVICE, dataService);
+    HashMap<String, Object> result = visitor.doWithTimeUpGame(event, params);
+    visitor.getKicked();
+    this.kick();
     return result;
   }
 
   private HashMap<String, Object> executeOnlyInLobbyState(String event, HashMap<String, Object> params) {
     this.accept(new LobbyStateVisitor());
     visitor.getAccepted(this);
+
+    /* params packaging */
+    switch (event) {
+      case GameConfig.LobbyStateEvent.GET_ACCESS_CODE -> {
+        System.out.println("At LobbyState, get access code event occurred.");
+        // TO DO
+      }
+      case GameConfig.LobbyStateEvent.START_GAME -> {
+        System.out.println("At LobbyState, start game event occurred.");
+        //params.put(ParamName.GAME_DATA_DICTIONARY, );
+        // TO DO
+      }
+      case GameConfig.LobbyStateEvent.REGISTER -> {
+        System.out.println("Pushing simpUserRegistry to params");
+        params.put(ParamName.SIMP_USER_REGISTRY, simpUserRegistry);
+        // TO DO
+      }
+    }
+    /* end of params packaging */
+
     HashMap<String, Object> result = visitor.doWithTimeUpGame(event, params);
-    this.kick();
     visitor.getKicked();
+    this.kick();
     return result;
   }
 

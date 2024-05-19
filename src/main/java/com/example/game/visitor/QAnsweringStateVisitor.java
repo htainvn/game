@@ -1,13 +1,11 @@
 package com.example.game.visitor;
 
 import com.example.game.config.GameConfig;
-import com.example.game.datacontainer.TempChoiceDictionary;
+import com.example.game.datacontainer.implementations.ChoiceDictionary;
 import com.example.game.dto.GameChoice;
-import com.example.game.executor.GameExecutor;
 import com.example.game.state.QStatisticsState;
 
 import java.util.HashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class QAnsweringStateVisitor extends Visitor{
@@ -22,7 +20,7 @@ public class QAnsweringStateVisitor extends Visitor{
             }
             case GameConfig.QAnsweringStateEvent.SEND_CHOICE -> {
                 System.out.println("At QAnsweringState, send choice event occurred.");
-                TempChoiceDictionary choices = (TempChoiceDictionary) params.get(GameConfig.ParamName.CHOICE_DICTIONARY);
+                ChoiceDictionary choices = (ChoiceDictionary) params.get(GameConfig.ParamName.CHOICE_DICTIONARY);
                 String player_id = (String) params.get(GameConfig.ParamName.PLAYER_ID);
                 Long answer_id = (Long) params.get(GameConfig.ParamName.ANSWER_ID);
                 Integer time = (Integer) params.get(GameConfig.ParamName.ANSWERED_TIME);

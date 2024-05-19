@@ -11,10 +11,10 @@ public class GameAnswerDto {
   public String answer;
   public boolean is_correct;
 
-  public GameAnswerDto(OriginalAnswerDto data) {
-    this.index = data.index;
-    this.answer = data.answer;
-    this.is_correct = data.is_correct;
+  public GameAnswerDto(Answer data) {
+    this.index = Math.toIntExact(data.getAid());
+    this.answer = data.getContent();
+    this.is_correct = data.getIsCorrect();
   }
 
   @Override

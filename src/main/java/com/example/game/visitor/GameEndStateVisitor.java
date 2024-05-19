@@ -1,7 +1,7 @@
 package com.example.game.visitor;
 
 import com.example.game.config.GameConfig;
-import com.example.game.datacontainer.TempScoreDictionary;
+import com.example.game.datacontainer.implementations.ScoreDictionary;
 
 import java.util.HashMap;
 
@@ -11,7 +11,7 @@ public class GameEndStateVisitor extends Visitor {
         switch (event) {
             case GameConfig.GameEndStateEvent.GET_FINAL_RANK -> {
                 System.out.println("At GameEndState, game end event occurred.");
-                TempScoreDictionary scoreDictionary = (TempScoreDictionary) params.get(GameConfig.ParamName.SCORE_DICTIONARY);
+                ScoreDictionary scoreDictionary = (ScoreDictionary) params.get(GameConfig.ParamName.SCORE_DICTIONARY);
                 HashMap<String, Object> result = new HashMap<>();
                 result.put(
                         GameConfig.ParamName.SCORE_DICTIONARY,

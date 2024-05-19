@@ -4,48 +4,90 @@ import com.example.game.config.GameConfig;
 import com.example.game.config.GameConfig.EmptyGameStateEvent;
 import com.example.game.config.GameConfig.GameEndStateEvent;
 import com.example.game.config.GameConfig.ParamName;
-import com.example.game.datacontainer.*;
+import com.example.game.datacontainer.interfaces.IChoiceDictionary;
+import com.example.game.datacontainer.interfaces.IGameDataDictionary;
+import com.example.game.datacontainer.interfaces.IPlayerDictionary;
+import com.example.game.datacontainer.interfaces.IScoreDictionary;
 import com.example.game.dto.OriginalQuizDto;
-import com.example.game.entities.GameQuizDto;
+import com.example.game.entities.Game;
 import com.example.game.executor.GameExecutor;
 import com.example.game.factory.GameFactory;
 import com.example.game.helper.RandomCode;
+import com.example.game.model.GameSettingsModel;
+import com.example.game.model.QuestionModel;
 import com.google.gson.Gson;
 import java.util.HashMap;
+import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Service;
 
 // Facade
+@Slf4j
 @Service
 public class GameService {
-  private HashMap<String, GameExecutor> games = new HashMap<>();
-  private TempPlayerDictionary players;
-  private TempChoiceDictionary choices;
-  private TempScoreDictionary scores;
-
-  private DataService dataService;
+  private final HashMap<String, GameExecutor> games = new HashMap<>();
+  private IPlayerDictionary players;
+  private IChoiceDictionary choices;
+  private IScoreDictionary scores;
+  private IGameDataDictionary gameData;
+  private final DataService dataService;
+  private final SimpMessagingTemplate simpMessagingTemplate;
+  private final SimpUserRegistry simpUserRegistry;
 
   @Autowired
-  public GameService(DataService dataService) {
+  public GameService(
+      IPlayerDictionary players,
+      IChoiceDictionary choices,
+      IScoreDictionary scores,
+      IGameDataDictionary gameData,
+      DataService dataService,
+      SimpMessagingTemplate simpMessagingTemplate,
+      SimpMessagingTemplate simpMessagingTemplate1, SimpUserRegistry simpUserRegistry) {
+    this.players = players;
+    this.choices = choices;
+    this.scores = scores;
+    this.gameData = gameData;
     this.dataService = dataService;
+    this.simpMessagingTemplate = simpMessagingTemplate1;
+    this.simpUserRegistry = simpUserRegistry;
   }
+
+  @Value("${quiz_service_url}")
+  private String quizServiceUrl;
 
   public Pair<String, String> /* <party_id, access_code> */ createGame(
       String quiz_id,
       String host_id,
       String gameFlowMode,
-      String gradingStrategy
+      String gradingStrategy,
+      String authHeader
   ) {
-    GameExecutor game = GameFactory.createGame(gameFlowMode, gradingStrategy);
+    GameFactory gameFactory = new GameFactory(
+        dataService,
+        simpMessagingTemplate,
+        simpUserRegistry
+    );
     try {
-      String quizData = new RestService().get("http://localhost:8080/quiz/" + quiz_id);
+      GameExecutor game = gameFactory.createGame(gameFlowMode, gradingStrategy);
+      String[] authSplit = authHeader.split(" ");
+      HashMap<String, String> headers = new HashMap<>();
+      headers.put("Authorization", authSplit[1]);
+      String quizData = new RestService()
+          .getWithHeaders(
+              quizServiceUrl + "quiz/" + quiz_id,
+              "",
+              headers
+          );
       Gson gson = new Gson();
       OriginalQuizDto originalQuizDto = gson.fromJson(quizData, OriginalQuizDto.class);
-      GameQuizDto gameQuizDto = new GameQuizDto(originalQuizDto);
+      Game gameDataObj = new Game(originalQuizDto);
       HashMap<String, Object> params = new HashMap<>();
       params.put(ParamName.EVENT, EmptyGameStateEvent.BIND);
-      params.put(ParamName.DATA, gameQuizDto);
+      params.put(ParamName.DATA, gameDataObj);
       HashMap<String, Object> result = game.execute(params);
       if (!result.get("status").equals("success")) {
         throw new Exception("Failed to create game");
@@ -53,11 +95,23 @@ public class GameService {
       String accessCode = RandomCode.generate(GameConfig.CODE_LENGTH);
       game.setAccessCode(accessCode);
       games.put(game.getGameID(), game);
-      dataService.store(gameQuizDto);
+      gameData.store(
+          game.getGameID(),
+          new GameSettingsModel(
+              game.getGameID(),
+              gameFlowMode,
+              gradingStrategy,
+              false,
+              false
+          )
+      );
+//      dataService.store("game", gameQuizDto);
+      return Pair.with(game.getGameID(), game.getAccessCode());
     } catch (Exception e) {
-      throw new UnsupportedOperationException();
+      e.printStackTrace();
+      log.atTrace().log("Failed to create game");
+      return null;
     }
-    return Pair.with(game.getGameID(), game.getAccessCode());
   }
 
   public void startGame(
@@ -66,10 +120,13 @@ public class GameService {
     GameExecutor game = games.get(party_id);
     HashMap<String, Object> params = new HashMap<>();
     params.put(ParamName.EVENT, GameConfig.LobbyStateEvent.START_GAME);
+    params.put(ParamName.GAME_DATA_DICTIONARY, gameData);
     HashMap<String, Object> result = game.execute(params);
     if (!result.get("status").equals("success")) {
       throw new UnsupportedOperationException();
     }
+    QuestionModel questionModel = (QuestionModel) result.get(ParamName.QUESTION);
+    assert (questionModel.getParty_id() != null);
   }
 
   public HashMap<String, Object> endGame(
@@ -88,22 +145,32 @@ public class GameService {
 
   public Pair<String, String>/* < status, player_id > */ registerPlayerToGame(
       String party_id,
-      String player_name
+      String player_name,
+      String wsUserID
   ) {
-    GameExecutor game = games.get(party_id);
-    HashMap<String, Object> params = new HashMap<>();
-    params.put(ParamName.EVENT, GameConfig.LobbyStateEvent.REGISTER);
-    params.put(ParamName.NAME, player_name);
-    params.put(ParamName.PLAYER_DICTIONARY, players);
-    HashMap<String, Object> result = game.execute(params);
+//    try {
+      GameExecutor game = games.get(party_id);
+      HashMap<String, Object> params = new HashMap<>();
+      params.put(ParamName.EVENT, GameConfig.LobbyStateEvent.REGISTER);
+      params.put(ParamName.NAME, player_name);
+      params.put(ParamName.PLAYER_DICTIONARY, players);
+      params.put(ParamName.GAME_DATA_DICTIONARY, gameData);
+      params.put(ParamName.WS_USER_NAME, wsUserID);
+      HashMap<String, Object> result = game.execute(params);
+      return Pair.with(result.get(ParamName.STATUS_PR).toString(), result.get(ParamName.PLAYER_ID).toString());
+//    }
+//    catch (Exception e) {
+//      throw new Exception("Failed to register player");
+//      return Pair.with("failed", "");
+//    }
 //    if (!result.get("status").equals("success")) {
 //      throw new UnsupportedOperationException();
 //    }
-    return Pair.with(result.get("status").toString(), result.get("player_id").toString());
   }
 
   public HashMap<String, Object> showQuestion(
-      String party_id) {
+      String party_id
+  ) {
     GameExecutor game = games.get(party_id);
     HashMap<String, Object> params = new HashMap<>();
     params.put(ParamName.EVENT, GameConfig.QShowingStateEvent.SHOW_QUESTION);
@@ -116,6 +183,34 @@ public class GameService {
     response.put(ParamName.QUESTION_TIME_OUT, result.get(ParamName.QUESTION_TIME_OUT));
     response.put(ParamName.CURRENT_QUESTION_CNT, result.get(ParamName.CURRENT_QUESTION_CNT));
     return response;
+  }
+
+  public void timeOutShowingQuestion(String party_id) {
+    GameExecutor game = games.get(party_id);
+    HashMap<String, Object> params = new HashMap<>();
+    params.put(ParamName.EVENT, GameConfig.QShowingStateEvent.TIME_OUT);
+    HashMap<String, Object> result = game.execute(params);
+    if (!result.get("status").equals("success")) {
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  public void timeOutAnsweringQuestion(String party_id) {
+    GameExecutor game = games.get(party_id);
+    HashMap<String, Object> params = new HashMap<>();
+    params.put(ParamName.EVENT, GameConfig.QAnsweringStateEvent.TIME_OUT);
+    HashMap<String, Object> result = game.execute(params);
+    if (!result.get("status").equals("success")) {
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  public void kickPlayer(String party_id, String player_id) {
+    throw new UnsupportedOperationException();
+  }
+
+  public void lockGame(String party_id) {
+    throw new UnsupportedOperationException();
   }
 
 //  public void answerQuestion(

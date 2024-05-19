@@ -1,6 +1,7 @@
 package com.example.game.visitor;
 
 import com.example.game.config.GameConfig;
+import com.example.game.datacontainer.implementations.GameDataDictionary;
 import com.example.game.entities.GameQuestionDto;
 import com.example.game.entities.Question;
 import com.example.game.executor.GameExecutor;
@@ -21,26 +22,35 @@ public class QShowingStateVisitor extends Visitor{
 
         switch (event) {
             case GameConfig.QShowingStateEvent.SHOW_QUESTION -> {
-                ThreadPoolExecutor executor = gameExecutor.getTimeoutThread();
-                System.out.println("At QShowingState, show question event occurred. Moving to QAnsweringState.");
-                int time = (int) params.get("time");
-                executor.execute(() -> {
-                    try {
-                        Thread.sleep(time * 1000L);
-                        HashMap<String, Object> new_params;
-                        new_params = new HashMap<>();
-                        new_params.put("event", GameConfig.QShowingStateEvent.TIME_OUT);
-                        gameExecutor.execute(new_params);
-                    } catch (InterruptedException e) {
-                        System.out.println("Thread Showing interrupted");
-                    }
-                });
-                // get question and return
-                GameQuestionDto question = new GameQuestionDto();
-                result.put(GameConfig.ParamName.QUESTION, question);
-                result.put(GameConfig.ParamName.QUESTION_TIME_OUT, getShowingTime(question));
+                GameDataDictionary gameDataDictionary =
+                    (GameDataDictionary) params.get(GameConfig.ParamName.GAME_DATA_DICTIONARY);
                 result.put(GameConfig.ParamName.CURRENT_QUESTION_CNT, gameExecutor.getCurrentQuestionCnt());
+                result.put(GameConfig.ParamName.QUESTION, gameDataDictionary.get(
+                    gameExecutor.getGameID(),
+                    gameExecutor.getCurrentQuestionCnt(),
+                    gameExecutor.getCurrentQuestionCnt() + 1
+                ));
                 return result;
+//                ThreadPoolExecutor executor = gameExecutor.getTimeoutThread();
+//                System.out.println("At QShowingState, show question event occurred. Moving to QAnsweringState.");
+//                int time = (int) params.get("time");
+//                executor.execute(() -> {
+//                    try {
+//                        Thread.sleep(time * 1000L);
+//                        HashMap<String, Object> new_params;
+//                        new_params = new HashMap<>();
+//                        new_params.put("event", GameConfig.QShowingStateEvent.TIME_OUT);
+//                        gameExecutor.execute(new_params);
+//                    } catch (InterruptedException e) {
+//                        System.out.println("Thread Showing interrupted");
+//                    }
+//                });
+//                // get question and return
+//                GameQuestionDto question = new GameQuestionDto();
+//                result.put(GameConfig.ParamName.QUESTION, question);
+//                result.put(GameConfig.ParamName.QUESTION_TIME_OUT, getShowingTime(question));
+//                result.put(GameConfig.ParamName.CURRENT_QUESTION_CNT, gameExecutor.getCurrentQuestionCnt());
+//                return result;
             }
             case GameConfig.QShowingStateEvent.TIME_OUT -> {
                 System.out.println("At QShowingState, time out event occurred. Moving to QAnsweringState.");

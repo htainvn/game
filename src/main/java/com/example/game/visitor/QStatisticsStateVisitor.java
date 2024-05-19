@@ -1,29 +1,33 @@
 package com.example.game.visitor;
 
 import com.example.game.config.GameConfig;
-import com.example.game.datacontainer.TempChoiceDictionary;
-import com.example.game.datacontainer.TempScoreDictionary;
+import com.example.game.datacontainer.implementations.ChoiceDictionary;
+import com.example.game.datacontainer.implementations.ScoreDictionary;
+import com.example.game.datacontainer.interfaces.IChoiceDictionary;
+import com.example.game.datacontainer.interfaces.IScoreDictionary;
 import com.example.game.entities.Question;
 import com.example.game.entities.Score;
 import com.example.game.strategies.GradingStrategy;
 
 import java.util.HashMap;
 
-public class QStatisticsStateVisitor extends Visitor{
+public class QStatisticsStateVisitor extends Visitor {
+
     public void calculateScore(
             String party_id,
             Question question,
+            Long iteration,
             GradingStrategy strategy,
-            TempChoiceDictionary choices,
-            TempScoreDictionary scores
+            IChoiceDictionary choices,
+            IScoreDictionary scores
     ) {
         HashMap<String, Score> playerScoreList = strategy.calculateScore(
                 question,
                 choices.getChoices(
                         party_id,
-                        question.getQid().getQid()
+                        question.getQid()
                 ),
-                scores.getScore(party_id));
+                scores.getScore(party_id, iteration));
         scores.setScore(party_id, playerScoreList);
     }
 
@@ -33,12 +37,13 @@ public class QStatisticsStateVisitor extends Visitor{
             case GameConfig.QStatisticsStateEvent.SEND_RESULT -> {
                 System.out.println("At QStatisticsState, send result event occurred.");
 
-                TempChoiceDictionary choices = (TempChoiceDictionary) params.get(GameConfig.ParamName.CHOICE_DICTIONARY);
-                TempScoreDictionary scores = (TempScoreDictionary) params.get(GameConfig.ParamName.SCORE_DICTIONARY);
+                ChoiceDictionary choices = (ChoiceDictionary) params.get(GameConfig.ParamName.CHOICE_DICTIONARY);
+                ScoreDictionary scores = (ScoreDictionary) params.get(GameConfig.ParamName.SCORE_DICTIONARY);
 
                 calculateScore(
                         gameExecutor.getGameID(),
                         (Question) params.get(GameConfig.ParamName.QUESTION),
+                        gameExecutor.getCurrentQuestionCnt(),
                         (GradingStrategy) params.get(GameConfig.ParamName.GRADING_STRATEGY),
                         choices,
                         scores
@@ -46,7 +51,8 @@ public class QStatisticsStateVisitor extends Visitor{
                 // TO DO
                 HashMap<String, Object> result = new HashMap<>();
                 result.put(GameConfig.ParamName.CHOICE_DICTIONARY, scores.getScore(
-                        gameExecutor.getGameID()
+                        gameExecutor.getGameID(),
+                        gameExecutor.getCurrentQuestionCnt()
                 ));
                 return result;
             }

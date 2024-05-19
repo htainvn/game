@@ -1,7 +1,7 @@
 package com.example.game.visitor;
 
 import com.example.game.config.GameConfig;
-import com.example.game.datacontainer.TempScoreDictionary;
+import com.example.game.datacontainer.implementations.ScoreDictionary;
 
 import java.util.HashMap;
 
@@ -12,7 +12,7 @@ public class GameRankingStateVisitor extends Visitor{
             case GameConfig.GameRankingStateEvent.GET_RANKING -> {
                 System.out.println("At GameRankingState, get ranking event occurred.");
                 // TO DO
-                TempScoreDictionary scoreDictionary = (TempScoreDictionary) params.get(GameConfig.ParamName.SCORE_DICTIONARY);
+                ScoreDictionary scoreDictionary = (ScoreDictionary) params.get(GameConfig.ParamName.SCORE_DICTIONARY);
                 HashMap<String, Object> result = new HashMap<>();
                 result.put(
                         GameConfig.ParamName.SCORE_DICTIONARY,

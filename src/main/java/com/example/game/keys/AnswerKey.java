@@ -11,6 +11,6 @@ import java.io.Serializable;
 public class AnswerKey implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    public String qid;
+    public Long qid;
     public Long aid;
 }
