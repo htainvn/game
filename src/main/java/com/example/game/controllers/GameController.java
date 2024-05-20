@@ -3,7 +3,7 @@ package com.example.game.controllers;
 import com.example.game.config.GameConfig;
 import com.example.game.config.GameConfig.DataServiceType;
 import com.example.game.constant.ReqType;
-import com.example.game.dto.OriginalQuizDto;
+import com.example.game.dto.*;
 import com.example.game.entities.Game;
 import com.example.game.entities.GameQuestionDto;
 import com.example.game.entities.GameQuizDto;
@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
+import java.util.*;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,8 +42,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.HashMap;
-import java.util.Objects;
 import org.springframework.web.bind.annotation.RestController;
 
 @Component
@@ -58,20 +57,20 @@ public class GameController {
   private final DataService dataService;
   private final GameRepository gameDataRepo;
 
-  @MessageMapping("/test-initialized")
-  @SendTo("/topic/general")
+  @MessageMapping("/test-initialize")
+  @SendToUser("/queue/game.INITIALIZED")
   public GameInitializedResponse testInitialized() {
-    return new GameInitializedResponse("gameID", "gameAccessCode");
+    return new GameInitializedResponse("gameID", "123456");
   }
 
   @MessageMapping("/test-register")
   @SendToUser("/queue/game.REGISTERED")
   public GameRegisteredResponse testRegister() {
-    return new GameRegisteredResponse("playerID", "playerAccessCode");
+    return new GameRegisteredResponse("true", "playerID123");
   }
 
   @MessageMapping("/test-start")
-  @SendToUser("/queue/game.START")
+  @SendTo("/topic/game.START")
   public GameStartResponse testStart() {
     return new GameStartResponse("gameID");
   }
@@ -79,37 +78,76 @@ public class GameController {
   @MessageMapping("/test-show")
   @SendTo("/topic/game.SHOW")
   public QShowingResponse testShow() {
-    return new QShowingResponse("gameID", 1L, "question", "answers", 10L, 10L);
+    ArrayList<ReturnAnswerDto> answers = new ArrayList<>(
+        Arrays.asList(
+            new ReturnAnswerDto(1, "answer1"),
+            new ReturnAnswerDto(2, "answer2"),
+            new ReturnAnswerDto(3, "answer3"),
+            new ReturnAnswerDto(4, "answer4")
+        )
+    );
+    ReturnQuestionDto question = new ReturnQuestionDto(1, "question", 3, answers);
+    return new QShowingResponse("gameID", 1, "question", new Gson().toJson(answers), question.getTime(), 3);
   }
 
   @MessageMapping("/test-answer")
-  @SendToUser("/topic/game.ANSWERED")
+  @SendToUser("/queue/game.ANSWERED")
   public QAnswerResponse testAnswer() {
     return new QAnswerResponse();
   }
 
   @MessageMapping("/test-skip")
-  @SendToUser("/topic/game.SKIPPED")
+  @SendTo("/topic/game.SKIPPED")
   public Response testSkip() {
     return new Response();
   }
 
   @MessageMapping("/test-stats")
-  @SendToUser("/topic/game.STATS")
+  @SendTo("/topic/game.STATS")
   public QEndResponse testStats() {
-    return new QEndResponse("gameID", "choiceDictionary");
+    ReturnStatisticDto statistic = new ReturnStatisticDto(
+      new ArrayList<>(
+        Arrays.asList(5L, 10L, 0L, 2L)
+      ),
+
+      "1",
+      new HashMap<>() {{
+        put("player1", new Pair<>(true, 10));
+        put("player2", new Pair<>(false, 0));
+        put("player3", new Pair<>(true, 5));
+      }}
+    );
+
+    return new QEndResponse("gameID", new Gson().toJson(statistic) );
   }
 
   @MessageMapping("/test-rank")
-  @SendToUser("/topic/game.RANK")
+  @SendToUser("/queue/game.RANK")
   public GameRankingResponse testRank() {
-    return new GameRankingResponse("gameID", "scoreDictionary");
+    ReturnRankingDto ranking = new ReturnRankingDto(
+      new HashMap<>() {{
+        put("player1", 3);
+        put("player2", 1);
+        put("player3", 5);
+        put("player4", 0);
+        put("player5", 4);
+        put("player6", 2);
+      }}
+    );
+    return new GameRankingResponse("gameID", new Gson().toJson(ranking));
   }
 
   @MessageMapping("/test-end")
   @SendTo("/topic/game.ENDED")
   public GameFinalRankingResponse testEnd() {
-    return new GameFinalRankingResponse("gameID", "scoreDictionary");
+    ReturnRankingDto ranking = new ReturnRankingDto(
+        new HashMap<>() {{
+          put("player1", 3);
+          put("player2", 2);
+          put("player3", 1);
+        }}
+    );
+    return new GameFinalRankingResponse("gameID", ranking.toString());
   }
 
   public GameController(

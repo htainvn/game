@@ -24,8 +24,8 @@ public class GameInitializedResponse extends Response {
   @Override
   public String toString() {
     return "GameInitializedResponse{" +
-        "gameID='" + gameID + '\'' +
-        ", gameAccessCode='" + gameAccessCode + '\'' +
+        "gameID='" + gameID + "'" +
+        ", gameAccessCode='" + gameAccessCode + "'" +
         '}';
   }
 }
