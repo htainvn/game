@@ -4,14 +4,19 @@ import com.example.game.dto.GameChoice;
 import com.example.game.entities.Question;
 import com.example.game.entities.Score;
 
+import com.example.game.model.QuestionModel;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class GradingDifficultyStrategy implements GradingStrategy{
 
     @Override
-    public HashMap<String, Score> calculateScore(Question question, ArrayList<GameChoice> playerAnswerList, HashMap<String, Score> playerScoreList) {
-        Long countCorrectAnswer = 0L;
+    public HashMap<String, Score> calculateScore(
+        QuestionModel question,
+        ArrayList<GameChoice> playerAnswerList,
+        HashMap<String, Score> playerScoreList
+    ) {
+        long countCorrectAnswer = 0L;
         for (GameChoice playerAnswer: playerAnswerList) {
             if (playerAnswer.getAid().equals(question.getCorrectAnswer())) {
                 countCorrectAnswer++;

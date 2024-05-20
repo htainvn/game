@@ -4,8 +4,6 @@ import com.example.game.dto.OriginalQuestionDto;
 import com.example.game.dto.OriginalQuizDto;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -27,15 +25,16 @@ import lombok.Setter;
 public class Game implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
+
   @Id
   private String game_id;
 
   @Setter
-  @OneToMany(mappedBy = "game", cascade = {CascadeType.ALL})
+  @OneToMany(mappedBy = "game", cascade = {CascadeType.ALL}, fetch = jakarta.persistence.FetchType.EAGER)
   private List<Question> questions;
 
-  public Game(OriginalQuizDto orginalQuizDto) {
-    this.game_id = UUID.randomUUID().toString();
+  public Game(String game_id, OriginalQuizDto orginalQuizDto) {
+    this.game_id = game_id;
     this.questions = new ArrayList<>();
     for (OriginalQuestionDto questionDto : orginalQuizDto.questions) {
       this.questions.add(new Question(questionDto, this));

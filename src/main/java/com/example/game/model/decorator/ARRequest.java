@@ -1,6 +1,7 @@
 package com.example.game.model.decorator;
 
 import com.example.game.config.GameConfig.ParamName;
+import com.example.game.entities.Question;
 import com.example.game.model.AnswerModel;
 import com.example.game.model.QuestionModel;
 import java.util.ArrayList;
@@ -17,6 +18,6 @@ public class ARRequest extends QFRequest {
 
   @Override
   public QuestionModel extract() {
-    return (QuestionModel) this.data.params.get(ParamName.COR_RESULT);
+    return new QuestionModel((Question) this.data.params.get(ParamName.COR_RESULT));
   }
 }

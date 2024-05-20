@@ -24,18 +24,24 @@ public class QAnsweringState extends GameState {
     switch (event) {
       case GameConfig.QAnsweringStateEvent.TIME_OUT -> {
         System.out.println("At QAnsweringState, timeout event occurred. Moving to QStatisticsState.");
-        gameExecutor.setState(new QStatisticsState());
+        GameState newQStatisticsState = new QStatisticsState();
+        gameExecutor.setState(newQStatisticsState);
+        newQStatisticsState.setGameExecutor(gameExecutor);
       }
       case GameConfig.QAnsweringStateEvent.SEND_CHOICE -> {
         System.out.println("At QAnsweringState, send choice event occurred.");
       }
       case GameConfig.QAnsweringStateEvent.EXCEED_MAX_CORRECT -> {
         System.out.println("At QAnsweringState, exceed max correct event occurred.");
-        gameExecutor.setState(new QStatisticsState());
+        GameState newQStatisticsState = new QStatisticsState();
+        gameExecutor.setState(newQStatisticsState);
+        newQStatisticsState.setGameExecutor(gameExecutor);
       }
       case GameConfig.QAnsweringStateEvent.SKIP -> {
         System.out.println("At QAnsweringState, skip event occurred.");
-        gameExecutor.setState(new QStatisticsState());
+        GameState newQStatisticsState = new QStatisticsState();
+        gameExecutor.setState(newQStatisticsState);
+        newQStatisticsState.setGameExecutor(gameExecutor);
       }
     }
   }

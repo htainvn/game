@@ -17,7 +17,6 @@ import lombok.Setter;
 public class RequestData implements Serializable {
   @Serial
   private static final long serialVersionUID = 1L;
-
   private String gameID;
   private String requestType;
   private String payload;

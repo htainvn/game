@@ -78,9 +78,8 @@ public class GameDataDictionary implements IGameDataDictionary {
             else {
               request = new CoRRequest();
             }
-            if (settingsObj.isAnswer_randomized()) {
-              request.putReq(ParamName.COR_ARANDOM, true);
-            }
+            request.putReq(ParamName.COR_ARANDOM,
+                settingsObj != null && settingsObj.isAnswer_randomized());
             request.putReq(ParamName.COR_FETCH, true);
             request.putParam(ParamName.DATA_SERVICE, dataService);
             request.putParam(ParamName.PARTY_ID, party_id);

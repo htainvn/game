@@ -4,6 +4,7 @@ import com.example.game.config.GameConfig;
 import com.example.game.config.GameConfig.ParamName;
 import com.example.game.datacontainer.implementations.GameDataDictionary;
 import com.example.game.datacontainer.implementations.PlayerDictionary;
+import com.example.game.datacontainer.implementations.ScoreDictionary;
 import com.example.game.entities.Player;
 
 import com.example.game.model.GameSettingsModel;
@@ -34,26 +35,35 @@ public class LobbyStateVisitor extends Visitor {
                     gameExecutor.getCurrentQuestionCnt() + 1
                 );
                 result.put(ParamName.QUESTION, question);
+                gameExecutor.getState().toNextState(GameConfig.LobbyStateEvent.START_GAME);
             }
             case GameConfig.LobbyStateEvent.REGISTER -> {
                 SimpUserRegistry simpUserRegistry =
                     (SimpUserRegistry) params.get(GameConfig.ParamName.SIMP_USER_REGISTRY);
                 System.out.println("At LobbyState, register event occurred.");
+                System.out.print("The name of the player: ");
+                System.out.println(params.get(GameConfig.ParamName.NAME).toString());
+                String playerId = (String) params.get(ParamName.WS_USER_NAME);
+                if (playerId != null) {
+                    System.out.print("The name of the player: ");
+                    System.out.println(playerId);
+                }
+                else {
+                    System.out.println("The name of the player is null.");
+                    playerId = params.get(GameConfig.ParamName.NAME).toString();
+                }
                 PlayerDictionary playerDictionary =
                         (PlayerDictionary) params.get(GameConfig.ParamName.PLAYER_DICTIONARY);
+                ScoreDictionary scoreDictionary =
+                        (ScoreDictionary) params.get(GameConfig.ParamName.SCORE_DICTIONARY);
                 // TODO: Where can I get the Session field?
                 Player newPlayer = new Player(
                     gameExecutor.getGameID(),
-                    params.get(GameConfig.ParamName.NAME).toString()
+                    playerId
                 );
                 playerDictionary.registerPlayer(gameExecutor.getGameID(), newPlayer);
-                String playerId = (String) params.get(ParamName.WS_USER_NAME);
-                if (playerId != null) {
-                    result.put(ParamName.PLAYER_ID, playerId);
-                }
-                else {
-                    result.put(ParamName.PLAYER_ID, newPlayer.getName());
-                }
+                scoreDictionary.createScore(gameExecutor.getGameID(), newPlayer.getName(), 0L);
+                result.put(ParamName.PLAYER_ID, newPlayer.getName());
             }
         }
         result.put(ParamName.STATUS_PR, "success");

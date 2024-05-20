@@ -7,6 +7,7 @@ import com.example.game.dto.OriginalQuizDto;
 import com.example.game.entities.Game;
 import com.example.game.entities.GameQuestionDto;
 import com.example.game.entities.GameQuizDto;
+import com.example.game.model.QuestionModel;
 import com.example.game.repository.GameRepository;
 import com.example.game.request.AnsweringPayload;
 import com.example.game.request.GInitializeRequest;
@@ -20,6 +21,8 @@ import com.google.gson.Gson;
 import java.security.Principal;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,7 +79,7 @@ public class GameController {
   @MessageMapping("/test-show")
   @SendTo("/topic/game.SHOW")
   public QShowingResponse testShow() {
-    return new QShowingResponse("gameID", 1, "question", "answers", 10, 10);
+    return new QShowingResponse("gameID", 1L, "question", "answers", 10L, 10L);
   }
 
   @MessageMapping("/test-answer")
@@ -135,7 +138,7 @@ public class GameController {
     String objStr = restService.getWithHeaders("http://localhost:4000/quiz/f1b3b3b1-0b3b-4b3b-8b3b-0b3b3b3b3b3b", "", headers);
     Gson gson = new Gson();
     OriginalQuizDto originalQuizDto = gson.fromJson(objStr, OriginalQuizDto.class);
-    Game game = new Game(originalQuizDto);
+    Game game = new Game(UUID.randomUUID().toString(), originalQuizDto);
 //    System.out.println(game);
 //    return gameDataRepo.findAll();
     dataService.store(DataServiceType.PERSIST_GAME, new HashMap<>() {{
@@ -213,21 +216,29 @@ public class GameController {
       throw new UnsupportedOperationException();
     }
     HashMap<String, Object> result = gameService.showQuestion(request.getGameID());
-    GameQuestionDto question = (GameQuestionDto) result.get(GameConfig.ParamName.QUESTION);
+    QuestionModel question = (QuestionModel) result.get(GameConfig.ParamName.QUESTION);
     QShowingResponse response = new QShowingResponse(
             request.getGameID(),
-            (Integer) result.get(GameConfig.ParamName.CURRENT_QUESTION_CNT),
-            question.getQuestion(),
+            (Long) result.get(GameConfig.ParamName.CURRENT_QUESTION_CNT),
+            question.getData(),
             question.getAnswers().toString(),
             question.getTime(),
-            (Integer) result.get(
-                    GameConfig.ParamName.QUESTION_TIME_OUT
-            ));
-    ThreadPoolExecutor executor = (ThreadPoolExecutor) result.get(GameConfig.ParamName.TIMEOUT_THREAD);
+            GameConfig.DEFAULT_SHOWING_TIME
+    );
+    ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
     executor.execute(() -> {
       try {
-        Thread.sleep(question.getTime() * 1000L);
+        Thread.sleep(GameConfig.DEFAULT_SHOWING_TIME);
         gameService.timeOutShowingQuestion(request.getGameID());
+        ThreadPoolExecutor second_executors = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
+        second_executors.execute(() -> {
+          try {
+            Thread.sleep(question.getTime());
+            gameService.timeOutAnsweringQuestion(request.getGameID());
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+        });
       } catch (InterruptedException e) {
         System.out.println("Thread Showing interrupted");
       }
@@ -237,15 +248,20 @@ public class GameController {
 
   @MessageMapping("/answer")
   @SendToUser("/topic/game.ANSWERED")
-  public QAnswerResponse answerGame(@Payload RequestData request) {
+  public QAnswerResponse answerGame(
+      @Payload RequestData request
+  ) {
     if (!Objects.equals(request.getRequestType(), ReqType.SEND_CHOICE)) {
       throw new UnsupportedOperationException();
     }
-
     AnsweringPayload payload = new Gson().fromJson(request.getPayload(), AnsweringPayload.class);
+    System.out.print("At this stage 1, the name: ");
+    System.out.println(payload.getPlayerID());
     gameService.receiveAnswer(
-        request.getGameID(), payload.getPlayerID(), payload.getAnswerID());
-
+        request.getGameID(),
+        payload.getPlayerID(),
+        payload.getAnswerID()
+    );
     return new QAnswerResponse();
   }
 
@@ -269,11 +285,10 @@ public class GameController {
 
     HashMap<String, Object> result = gameService.getResults(request.getGameID());
     Gson gson = new Gson();
-    QEndResponse response =
-            new QEndResponse(
-                    request.getGameID(),
-                    gson.toJson(result.get(GameConfig.ParamName.CHOICE_DICTIONARY))
-            );
+    QEndResponse response = new QEndResponse(
+                              request.getGameID(),
+                              gson.toJson(result.get(GameConfig.ParamName.CHOICE_DICTIONARY))
+    );
     return response;
   }
 

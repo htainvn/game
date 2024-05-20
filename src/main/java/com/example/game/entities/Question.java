@@ -35,11 +35,11 @@ public class Question implements Serializable {
 
     @Getter
     @Column
-    private Integer time;
+    private Long time;
 
     @Getter
     @Setter
-    @OneToMany(mappedBy = "question", cascade = {CascadeType.ALL})
+    @OneToMany(mappedBy = "question", cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
     private List<Answer> answers;
 
     @ManyToOne
@@ -50,7 +50,7 @@ public class Question implements Serializable {
     public Question(OriginalQuestionDto originalQuestionDto, Game game) {
         this.qid = (long) originalQuestionDto.index;
         this.statement = originalQuestionDto.question;
-        this.time = originalQuestionDto.time_limit;
+        this.time = (long) originalQuestionDto.time_limit;
         this.game = game;
         this.answers = new java.util.ArrayList<>();
         for (int i = 0; i < originalQuestionDto.answers.size(); i++) {

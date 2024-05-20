@@ -1,14 +1,18 @@
 package com.example.game.datacontainer.implementations;
 
+import com.example.game.config.GameConfig;
 import com.example.game.datacontainer.cachekey.GameCacheKey;
 import com.example.game.datacontainer.interfaces.IChoiceDictionary;
 import com.example.game.datacontainer.interfaces.IPlayerDictionary;
 import com.example.game.dto.GameChoice;
 import com.example.game.entities.Player;
+import com.example.game.redis.RedisObject;
+import com.example.game.redis.RedisRepo;
 import com.example.game.redis.RedisService;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -29,10 +33,19 @@ public class ChoiceDictionary implements IChoiceDictionary {
           String party_id = key.party_id;
           Long qid = key.qid;
           String player_id = key.player_id;
-          GameChoice choice = (GameChoice) redis.find(
-              party_id + ":" + qid + ":" + player_id,
-              GameChoice.class
+          RedisObject redisObject = redis.findHash(
+              "ach:" + party_id + ":" + qid + ":" + player_id
           );
+          if (redisObject == null) {
+            return GameChoice.builder()
+              .party_id(party_id)
+              .qid(qid)
+              .player_id(player_id)
+              .aid(null)
+              .time(null)
+              .build();
+          }
+          GameChoice choice = new Gson().fromJson(redisObject.getValue(), GameChoice.class);
           if (choice == null) {
             return GameChoice.builder()
               .party_id(party_id)
@@ -47,11 +60,11 @@ public class ChoiceDictionary implements IChoiceDictionary {
         }
       }
     );
-  private final RedisService redis;
+  private final RedisRepo redis;
   private final IPlayerDictionary players;
 
   @Autowired
-  public ChoiceDictionary(RedisService redis, IPlayerDictionary players) {
+  public ChoiceDictionary(RedisRepo redis, IPlayerDictionary players) {
     this.redis = redis;
     this.players = players;
   }
@@ -71,9 +84,11 @@ public class ChoiceDictionary implements IChoiceDictionary {
 
   @Override
   public void addChoice(GameChoice choice) {
-    redis.save(
-        choice.getParty_id() + ":" + choice.getQid() + ":" + choice.getPlayer_id(),
-        choice
+    System.out.print("At this stage 4, the name: ");
+    System.out.println(choice.getPlayer_id());
+    redis.saveHash(
+        "ach:" + choice.getParty_id() + ":" + choice.getQid() + ":" + choice.getPlayer_id(),
+        new RedisObject(choice, 240)
     );
     choices.put(
         new GameCacheKey(choice.getParty_id(), choice.getQid(), choice.getPlayer_id()),
@@ -84,14 +99,14 @@ public class ChoiceDictionary implements IChoiceDictionary {
   @Override
   public @Nullable ArrayList<GameChoice> getChoices(String party_id, Long qid) {
     ArrayList<Player> playersInParty = players.getAllPlayers(party_id);
-    ArrayList<GameChoice> choices = new ArrayList<>();
+    ArrayList<GameChoice> choices_arr = new ArrayList<>();
     for (Player player : playersInParty) {
       GameChoice choice = get(party_id, qid, player.getName());
       if (choice != null) {
-        choices.add(choice);
+        choices_arr.add(choice);
       }
       else {
-        choices.add(
+        choices_arr.add(
             GameChoice.builder()
               .party_id(party_id)
               .qid(qid)
@@ -102,7 +117,7 @@ public class ChoiceDictionary implements IChoiceDictionary {
         );
       }
     }
-    return choices;
+    return choices_arr;
   }
 
   @Override

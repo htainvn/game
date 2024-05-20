@@ -16,6 +16,7 @@ import com.example.game.helper.RandomCode;
 import com.example.game.model.GameSettingsModel;
 import com.example.game.model.QuestionModel;
 import com.google.gson.Gson;
+import java.util.Date;
 import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Pair;
@@ -59,6 +60,10 @@ public class GameService {
   @Value("${quiz_service_url}")
   private String quizServiceUrl;
 
+  public GameExecutor getGame(String gameid) {
+    return games.get(gameid);
+  }
+
   public Pair<String, String> /* <party_id, access_code> */ createGame(
       String quiz_id,
       String host_id,
@@ -84,7 +89,7 @@ public class GameService {
           );
       Gson gson = new Gson();
       OriginalQuizDto originalQuizDto = gson.fromJson(quizData, OriginalQuizDto.class);
-      Game gameDataObj = new Game(originalQuizDto);
+      Game gameDataObj = new Game(game.getGameID(), originalQuizDto);
       HashMap<String, Object> params = new HashMap<>();
       params.put(ParamName.EVENT, EmptyGameStateEvent.BIND);
       params.put(ParamName.DATA, gameDataObj);
@@ -154,6 +159,7 @@ public class GameService {
       params.put(ParamName.EVENT, GameConfig.LobbyStateEvent.REGISTER);
       params.put(ParamName.NAME, player_name);
       params.put(ParamName.PLAYER_DICTIONARY, players);
+      params.put(ParamName.SCORE_DICTIONARY, scores);
       params.put(ParamName.GAME_DATA_DICTIONARY, gameData);
       params.put(ParamName.WS_USER_NAME, wsUserID);
       HashMap<String, Object> result = game.execute(params);
@@ -174,6 +180,7 @@ public class GameService {
     GameExecutor game = games.get(party_id);
     HashMap<String, Object> params = new HashMap<>();
     params.put(ParamName.EVENT, GameConfig.QShowingStateEvent.SHOW_QUESTION);
+    params.put(ParamName.GAME_DATA_DICTIONARY, gameData);
     HashMap<String, Object> result = game.execute(params);
     if (!result.get("status").equals("success")) {
       throw new UnsupportedOperationException();
@@ -235,6 +242,9 @@ public class GameService {
     params.put(ParamName.PLAYER_ID, player_id);
     params.put(ParamName.ANSWER_ID, answer_id);
     params.put(ParamName.CHOICE_DICTIONARY, choices);
+    params.put(ParamName.ANSWERED_TIME, new Date().getTime());
+    System.out.print("At this stage 2, the name: ");
+    System.out.println(player_id);
     HashMap<String, Object> result = game.execute(params);
     if (!result.get("status").equals("success")) {
       throw new UnsupportedOperationException();
@@ -257,6 +267,7 @@ public class GameService {
     params.put(ParamName.EVENT, GameConfig.QStatisticsStateEvent.SEND_RESULT);
     params.put(ParamName.CHOICE_DICTIONARY, choices);
     params.put(ParamName.SCORE_DICTIONARY, scores);
+    params.put(ParamName.GAME_DATA_DICTIONARY, gameData);
     params.put(ParamName.GRADING_STRATEGY, game.getStrategy());
     HashMap<String, Object> result = game.execute(params);
     if (!result.get("status").equals("success")) {

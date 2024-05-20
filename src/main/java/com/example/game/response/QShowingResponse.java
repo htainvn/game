@@ -11,10 +11,9 @@ import lombok.Setter;
 @NoArgsConstructor
 public class QShowingResponse extends Response {
   private String gameID;
-  private Integer questionNumber;
+  private Long questionNumber;
   private String data;
   private String answer;
-  private Integer timeLimit;
-  private Integer timeout;
-
+  private Long timeLimit;
+  private Long showingTime;
 }

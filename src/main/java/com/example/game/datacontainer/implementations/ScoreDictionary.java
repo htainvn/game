@@ -6,10 +6,13 @@ import com.example.game.datacontainer.interfaces.IPlayerDictionary;
 import com.example.game.datacontainer.interfaces.IScoreDictionary;
 import com.example.game.entities.Player;
 import com.example.game.entities.Score;
+import com.example.game.redis.RedisObject;
+import com.example.game.redis.RedisRepo;
 import com.example.game.redis.RedisService;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -27,9 +30,17 @@ public class ScoreDictionary implements IScoreDictionary {
         public @NotNull Score load(@NotNull ScoreCacheKey key) {
           String party_id = key.party_id;
           String player_id = key.player_id;
-          Score score = new Score(party_id, player_id, redis.findScore(
-            party_id + ":" + player_id
-          ));
+          Long iteration = key.iteration;
+          RedisObject redisObject = redis.findHash(
+              "scr:" + party_id + ":" + player_id + ":" + iteration
+          );
+          if (redisObject == null) {
+            return new Score(party_id, player_id, iteration, 0L);
+          }
+          Score score = new Gson().fromJson(redisObject.getValue(), Score.class);
+          if (score == null) {
+            return new Score(party_id, player_id, iteration, 0L);
+          }
           scores.put(key, score);
           return score;
         }
@@ -58,10 +69,10 @@ public class ScoreDictionary implements IScoreDictionary {
       }
     );
 
-  private final RedisService redis;
+  private final RedisRepo redis;
   private final IPlayerDictionary playerDictionary;
 
-  public ScoreDictionary(RedisService redis, IPlayerDictionary playerDictionary) {
+  public ScoreDictionary(RedisRepo redis, IPlayerDictionary playerDictionary) {
     this.redis = redis;
     this.playerDictionary = playerDictionary;
   }
@@ -99,11 +110,14 @@ public class ScoreDictionary implements IScoreDictionary {
   }
 
   @Override
-  public void setScore(String party_id, HashMap<String, Score> score) {
+  public void setScore(String party_id, HashMap<String, Score> scores) {
     ArrayList<Score> scoresArray = new ArrayList<>();
-    for (String player_id : score.keySet()) {
-      scoresArray.add(score.get(player_id));
-      redis.save(party_id + ":" + player_id, score.get(player_id).getScore());
+    for (String player_id : scores.keySet()) {
+      scoresArray.add(scores.get(player_id));
+      redis.saveHash(
+          "scr:" + party_id + ":" + player_id + ":" + scores.get(player_id).getIteration(),
+          new RedisObject(new Gson().toJson(scores.get(player_id)), 120)
+      );
     }
   }
 
@@ -115,6 +129,16 @@ public class ScoreDictionary implements IScoreDictionary {
   @Override
   public void refreshRanking(String party_id) {
     scores.cleanUp();
+  }
+
+  @Override
+  public void createScore(String party_id, String player_id, Long iteration) {
+    Score score = new Score(party_id, player_id, iteration, 0L);
+    scores.put(new ScoreCacheKey(party_id, player_id, iteration), score);
+    redis.saveHash(
+        "scr:" + party_id + ":" + player_id + ":" + iteration,
+        new RedisObject(new Gson().toJson(score), 180)
+    );
   }
 
 

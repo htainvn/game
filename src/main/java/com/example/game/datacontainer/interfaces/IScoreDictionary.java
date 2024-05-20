@@ -15,4 +15,6 @@ public interface IScoreDictionary {
     public HashMap<String, Score> getRanking(String party_id);
 
     public void refreshRanking(String party_id);
+
+    public void createScore(String party_id, String player_id, Long iteration);
 }

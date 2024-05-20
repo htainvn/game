@@ -2,6 +2,7 @@ package com.example.game.state;
 
 import com.example.game.config.GameConfig;
 
+import com.example.game.entities.Game;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 public class QShowingState extends GameState {
 
   public QShowingState() {
+
     super();
   }
 
@@ -19,12 +21,13 @@ public class QShowingState extends GameState {
     switch (event) {
       case GameConfig.QShowingStateEvent.TIME_OUT -> {
         log.info("At QShowingState, time out event occurred.");
-        gameExecutor.setState(new QAnsweringState());
+        GameState newQAnsweringState = new QAnsweringState();
+        gameExecutor.setState(newQAnsweringState);
+        newQAnsweringState.setGameExecutor(gameExecutor);
       }
       case GameConfig.QShowingStateEvent.ANSWER_QUESTION -> {
         log.info("At QShowingState, answer question event occurred. Moving to QAnsweringState.");
         gameExecutor.setState(new QAnsweringState());
-
         HashMap<String, Object> params;
         params = new HashMap<>();
         params.put("event", GameConfig.QAnsweringStateEvent.INITIALIZE);

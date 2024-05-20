@@ -9,7 +9,9 @@ public class EmptyGameState extends GameState {
   public void toNextState(String event) {
     switch (event) {
       case EmptyGameStateEvent.INITIALIZED -> {
-        gameExecutor.setState(new LobbyState());
+        GameState newLobbyState = new LobbyState();
+        gameExecutor.setState(newLobbyState);
+        newLobbyState.setGameExecutor(gameExecutor);
       }
     }
   }

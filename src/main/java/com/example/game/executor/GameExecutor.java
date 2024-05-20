@@ -2,7 +2,11 @@ package com.example.game.executor;
 
 import com.example.game.config.GameConfig;
 import com.example.game.config.GameConfig.ParamName;
+import com.example.game.config.GameConfig.QAnsweringStateEvent;
+import com.example.game.config.GameConfig.QStatisticsStateEvent;
+import com.example.game.datacontainer.implementations.GameDataDictionary;
 import com.example.game.model.GameSettingsModel;
+import com.example.game.model.QuestionModel;
 import com.example.game.services.DataService;
 import com.example.game.state.EmptyGameState;
 import com.example.game.state.GameEndState;
@@ -15,6 +19,7 @@ import com.example.game.state.QStatisticsState;
 import com.example.game.strategies.GradingStrategy;
 import com.example.game.visitor.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -26,25 +31,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 
 public abstract class GameExecutor {
-  @Getter
-  @Setter
+  @Getter @Setter
   private String gameID;
-  @Getter
-  @Setter
+  @Getter @Setter
   private Integer questionCount;
-  @Getter
-  @Setter
+  @Getter @Setter
   private Long currentQuestionID;
-  @Getter
-  @Setter
+  @Getter @Setter
   private Long currentQuestionCnt;
+  @Getter @Setter
+  private QuestionModel question;
   @Getter
   private String accessCode;
-  @Getter
-  @Setter
+  @Getter @Setter
   private GameState state;
-  @Getter
-  @Setter
+  @Getter @Setter
   private GradingStrategy strategy;
   @Getter
   private ThreadPoolExecutor timeoutThread = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
@@ -54,6 +55,7 @@ public abstract class GameExecutor {
   private final SimpUserRegistry simpUserRegistry;
   protected Visitor visitor;
   private GameSettingsModel settings;
+  private final Long randomHash;
   @Autowired
   protected GameExecutor(
       DataService dataService,
@@ -61,9 +63,31 @@ public abstract class GameExecutor {
   ) {
     this.dataService = dataService;
     this.simpUserRegistry = simpUserRegistry;
+    ArrayList<Long> randomHashes = new ArrayList<>();
+    randomHashes.add(7L);
+    randomHashes.add(13L);
+    randomHashes.add(17L);
+    randomHashes.add(19L);
+    randomHashes.add(23L);
+    randomHashes.add(29L);
+    randomHashes.add(31L);
+    randomHashes.add(37L);
+    randomHashes.add(41L);
+    randomHashes.add(47L);
+    randomHashes.add(53L);
+    randomHashes.add(59L);
+    randomHash = randomHashes.get((int) (Math.random() * randomHashes.size()));
   }
 
-  public HashMap<String, Object>  execute(
+  protected Long toHashedQuestionID() {
+    return currentQuestionID * randomHash % questionCount;
+  }
+
+  protected Long toNextHashedQuestionID() {
+    return (currentQuestionID + 1) * randomHash % questionCount;
+  }
+
+  public HashMap<String, Object>  execute (
       HashMap<String, Object> params
   ) {
     HashMap<String, Object> result = new HashMap<>();
@@ -104,19 +128,19 @@ public abstract class GameExecutor {
     else {
       throw new RuntimeException("Invalid state");
     }
-    tmp_result.forEach((key, value) -> {
-      if (key.equals(ParamName.STATUS_PR) && value.equals("failed")) {
-        result.put(ParamName.STATUS_PR, value);
-      }
-      else {
-        if (result.containsKey(key)) {
-          throw new RuntimeException("Duplicated key");
+    if (tmp_result != null) {
+      tmp_result.forEach((key, value) -> {
+        if (key.equals(ParamName.STATUS_PR) && value.equals("failed")) {
+          result.put(ParamName.STATUS_PR, value);
+        } else {
+          if (result.containsKey(key)) {
+            throw new RuntimeException("Duplicated key");
+          } else {
+            result.put(key, value);
+          }
         }
-        else {
-          result.put(key, value);
-        }
-      }
-    });
+      });
+    }
     result.put("state", state);
     result.put(ParamName.STATUS_PR, "success");
     return result;
@@ -164,20 +188,51 @@ public abstract class GameExecutor {
   private HashMap<String, Object> executeOnlyInQShowingState(String event, HashMap<String, Object> params) {
     this.accept(new QShowingStateVisitor());
     visitor.getAccepted(this);
+
+    /* params packaging */
+    switch (event) {
+      case GameConfig.QShowingStateEvent.SHOW_QUESTION -> {
+        System.out.println("At QShowingState, show question event occurred.");
+      }
+    }
+
     HashMap<String, Object> result = visitor.doWithTimeUpGame(event, params);
-    this.kick();
     visitor.getKicked();
+    this.kick();
     return result;
   }
 
   protected abstract HashMap<String, Object> executeOnlyInQAnsweringState(String event, HashMap<String, Object> params);
 
-  private HashMap<String, Object> executeOnlyInQStatisticsState(String event, HashMap<String, Object> params) {
-    this.accept(new QShowingStateVisitor());
+  private HashMap<String, Object> executeOnlyInQStatisticsState(
+      String event,
+      HashMap<String, Object> params
+  ) {
+    this.accept(new QStatisticsStateVisitor());
     visitor.getAccepted(this);
+
+    /* params packaging */
+    switch (event) {
+      case QStatisticsStateEvent.SEND_RESULT -> {
+        System.out.println("At QStatisticsState, send result event occurred.");
+        GameDataDictionary gameDataDictionary = (GameDataDictionary)
+                params
+                .get(ParamName.GAME_DATA_DICTIONARY);
+        params.put(ParamName.QUESTION,
+            gameDataDictionary.get(
+              gameID,
+              toHashedQuestionID(),
+              toHashedQuestionID()
+            )
+        );
+        // TO DO
+      }
+    }
+    /* params packaging */
+
     HashMap<String, Object> result = visitor.doWithTimeUpGame(event, params);
-    this.kick();
     visitor.getKicked();
+    this.kick();
     return result;
   }
 
@@ -185,8 +240,8 @@ public abstract class GameExecutor {
     this.accept(new GameRankingStateVisitor());
     visitor.getAccepted(this);
     HashMap<String, Object> result = visitor.doWithTimeUpGame(event, params);
-    this.kick();
     visitor.getKicked();
+    this.kick();
     return result;
   }
 
@@ -194,8 +249,8 @@ public abstract class GameExecutor {
     this.accept(new GameEndStateVisitor());
     visitor.getAccepted(this);
     HashMap<String, Object> result = visitor.doWithTimeUpGame(event, params);
-    this.kick();
     visitor.getKicked();
+    this.kick();
     return result;
   }
 

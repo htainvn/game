@@ -7,6 +7,7 @@ import com.example.game.datacontainer.interfaces.IChoiceDictionary;
 import com.example.game.datacontainer.interfaces.IScoreDictionary;
 import com.example.game.entities.Question;
 import com.example.game.entities.Score;
+import com.example.game.model.QuestionModel;
 import com.example.game.strategies.GradingStrategy;
 
 import java.util.HashMap;
@@ -15,7 +16,7 @@ public class QStatisticsStateVisitor extends Visitor {
 
     public void calculateScore(
             String party_id,
-            Question question,
+            QuestionModel question,
             Long iteration,
             GradingStrategy strategy,
             IChoiceDictionary choices,
@@ -42,7 +43,7 @@ public class QStatisticsStateVisitor extends Visitor {
 
                 calculateScore(
                         gameExecutor.getGameID(),
-                        (Question) params.get(GameConfig.ParamName.QUESTION),
+                        (QuestionModel) params.get(GameConfig.ParamName.QUESTION),
                         gameExecutor.getCurrentQuestionCnt(),
                         (GradingStrategy) params.get(GameConfig.ParamName.GRADING_STRATEGY),
                         choices,

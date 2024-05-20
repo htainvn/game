@@ -22,9 +22,19 @@ public class QAnsweringStateVisitor extends Visitor{
                 System.out.println("At QAnsweringState, send choice event occurred.");
                 ChoiceDictionary choices = (ChoiceDictionary) params.get(GameConfig.ParamName.CHOICE_DICTIONARY);
                 String player_id = (String) params.get(GameConfig.ParamName.PLAYER_ID);
+                System.out.print("At this stage 3, the name: ");
+                System.out.println(params.get(GameConfig.ParamName.PLAYER_ID));
                 Long answer_id = (Long) params.get(GameConfig.ParamName.ANSWER_ID);
-                Integer time = (Integer) params.get(GameConfig.ParamName.ANSWERED_TIME);
-                choices.addChoice(new GameChoice(gameExecutor.getGameID(), player_id, gameExecutor.getCurrentQuestionID(), answer_id, time));
+                Long time = (Long) params.get(GameConfig.ParamName.ANSWERED_TIME);
+                choices.addChoice(
+                    new GameChoice(
+                        gameExecutor.getGameID(),
+                        player_id,
+                        gameExecutor.getCurrentQuestionID(),
+                        answer_id,
+                        time
+                    )
+                );
             }
             case GameConfig.QAnsweringStateEvent.TIME_OUT -> {
                 System.out.println("At QAnsweringState, timeout event occurred. Moving to QStatisticsState.");

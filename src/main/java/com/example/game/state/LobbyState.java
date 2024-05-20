@@ -18,7 +18,10 @@ public class LobbyState extends GameState {
     switch (event) {
       case GameConfig.LobbyStateEvent.START_GAME -> {
         System.out.println("Game started");
-        gameExecutor.setState(new QShowingState());
+        GameState newQShowingState = new QShowingState();
+        gameExecutor.setState(newQShowingState);
+        newQShowingState.setGameExecutor(gameExecutor);
+        gameExecutor.setCurrentQuestionID(0L);
       }
       case GameConfig.LobbyStateEvent.GET_ACCESS_CODE -> {
         System.out.println("Access code is: " + gameExecutor.getAccessCode());

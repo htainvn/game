@@ -25,6 +25,7 @@ public class EmptyGameStateVisitor extends Visitor {
         dataService.store(DataServiceType.PERSIST_GAME, params);
         params.put("status", "success");
         gameExecutor.getState().toNextState(EmptyGameStateEvent.INITIALIZED);
+        gameExecutor.setQuestionCount(game.getQuestions().size());
       }
     }
     return params;

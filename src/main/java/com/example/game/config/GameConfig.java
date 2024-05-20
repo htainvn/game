@@ -16,6 +16,8 @@ public class GameConfig {
 
   public static final long DEFAULT_TTL = 1000 * 60 * 5L;
 
+  public static final long DEFAULT_SHOWING_TIME = 1000 * 5L;
+
   public class GameFlowType {
     public static final String MAX_CORRECT = "max_correct";
     public static final String TIME_UP = "time_up";

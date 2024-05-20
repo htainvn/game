@@ -17,12 +17,11 @@ public class Score implements Serializable
   @Serial
   private static final long serialVersionUID = 1L;
 
-  @Id
   private String pid; //party id
 
-  @Id
   private String player_id;
 
-  private Long score;
+  private Long iteration;
 
+  private Long score;
 }

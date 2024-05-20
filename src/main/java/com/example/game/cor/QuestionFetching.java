@@ -32,7 +32,8 @@ public class QuestionFetching extends Responsibility {
       HashMap<String, Object> args = new HashMap<>();
       args.put("party_id", gid);
       args.put("qid", qid);
-      QuestionModel question = (QuestionModel) dataService.get("question", args).get("question");
+      HashMap<String, Object> result = dataService.get("question", args);
+      qfRequest.getData().params.put(ParamName.COR_RESULT, result.get("question"));
       ARRequest arRequest = new ARRequest(qfRequest);
       return this.next.handleRequest(arRequest);
     } else {

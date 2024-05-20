@@ -18,6 +18,6 @@ public class AnsweringPayload implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private String playerID;
-  private String questionID;
+  private Long questionID;
   private Long answerID;
 }

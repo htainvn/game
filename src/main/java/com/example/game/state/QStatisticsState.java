@@ -1,6 +1,7 @@
 package com.example.game.state;
 
 import com.example.game.config.GameConfig;
+import com.example.game.entities.Game;
 
 public class QStatisticsState extends GameState {
   private boolean isFinal;
@@ -12,9 +13,13 @@ public class QStatisticsState extends GameState {
       case GameConfig.QStatisticsStateEvent.SEND_RESULT -> {
         System.out.println("At QStatisticsState, send result event occurred. Moving to GameEndState.");
         if (isFinal) {
-          gameExecutor.setState(new GameEndState());
+          GameState newGameEndState = new GameEndState();
+          gameExecutor.setState(newGameEndState);
+          newGameEndState.setGameExecutor(gameExecutor);
         } else {
-          gameExecutor.setState(new GameRankingState());
+          GameState newGameRankingState = new GameRankingState();
+          gameExecutor.setState(newGameRankingState);
+          newGameRankingState.setGameExecutor(gameExecutor);
         }
       }
     }

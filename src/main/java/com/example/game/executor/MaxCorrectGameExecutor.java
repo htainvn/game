@@ -22,8 +22,8 @@ public class MaxCorrectGameExecutor extends GameExecutor {
     this.accept(new QAnsweringStateVisitor());
     visitor.getAccepted(this);
     HashMap<String, Object> result = visitor.doWithMaxCorrectGame(event, params);
-    this.kick();
     visitor.getKicked();
+    this.kick();
     return result;
   }
 }
